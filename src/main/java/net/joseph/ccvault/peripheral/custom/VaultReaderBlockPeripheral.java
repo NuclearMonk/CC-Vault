@@ -294,18 +294,6 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
     }
 
     @LuaFunction
-    public final int getUsedFreeCuts(int index) {
-        ItemStack stack = be.getItemStack();
-
-        int cuts = 0;
-        if (stack.getTag() != null && stack.getTag().contains("freeCuts")) {
-            cuts = stack.getTag().getInt("freeCuts");
-        }
-
-        return cuts;
-    }
-
-    @LuaFunction
     public final String getImplicit(int index) {
         VaultGearData data = VaultGearData.read(be.getItemStack());
         VaultGearModifier.AffixType type = VaultGearModifier.AffixType.IMPLICIT;
