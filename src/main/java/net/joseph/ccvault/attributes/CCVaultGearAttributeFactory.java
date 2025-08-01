@@ -18,6 +18,7 @@ import iskallia.vault.gear.attribute.VaultGearAttribute;
 import iskallia.vault.gear.attribute.VaultGearAttributeInstance;
 import iskallia.vault.gear.attribute.VaultGearModifier;
 import iskallia.vault.gear.attribute.VaultGearModifier.AffixType;
+import iskallia.vault.gear.attribute.ability.AbilityLevelAttribute;
 import iskallia.vault.gear.attribute.config.ConfigurableAttributeGenerator;
 import iskallia.vault.gear.attribute.config.DoubleAttributeGenerator;
 import iskallia.vault.gear.attribute.config.FloatAttributeGenerator;
@@ -107,6 +108,14 @@ public class CCVaultGearAttributeFactory {
             ConfigurableAttributeGenerator<EffectAvoidanceListGearAttribute, EffectAvoidanceListGearAttribute.Config> gen = EffectAvoidanceListGearAttribute.generator();
             return new RangedAttribute<Float>("Effect Avoidance", v.getChance() , gen.getMinimumValue(ranges).get().getChance(),
                     gen.getMaximumValue(ranges).get().getChance());
+        }else if (value instanceof AbilityLevelAttribute) {
+            AbilityLevelAttribute v = (AbilityLevelAttribute) value;
+            VaultGearTierConfig.ModifierConfigRange configRange = getConfigRange(stack, modifier, data);
+            List<AbilityLevelAttribute.Config> ranges = configRange.allTierConfigs().stream()
+                    .map(o -> (AbilityLevelAttribute.Config) o).collect(Collectors.toList());
+            ConfigurableAttributeGenerator<AbilityLevelAttribute, AbilityLevelAttribute.Config> gen = AbilityLevelAttribute.generator();
+            return new CCAbilityLevelAttribute(v.getAbility(), v.getLevelChange() , gen.getMinimumValue(ranges).get().getLevelChange(),
+                    gen.getMaximumValue(ranges).get().getLevelChange());
         } else {
             HashMap<String, Object> map = new HashMap<>();
             map.put("modifier", modifier.toString());
