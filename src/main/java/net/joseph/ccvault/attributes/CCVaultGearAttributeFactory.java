@@ -72,21 +72,26 @@ public class CCVaultGearAttributeFactory {
             }
 
         }
-        VaultGearTierConfig.ModifierConfigRange configRange = getConfigRange(stack, modifier, data);
+        // Configs are generally split by level and by roll tiers, so we query by level
+        VaultGearTierConfig.ModifierConfigRange modifierConfig = getModifierConfigForLevel(stack, modifier, data.getItemLevel());
         if (value instanceof Integer) {
-            List<IntegerAttributeGenerator.Range> ranges = getRanges(configRange);
+             //Since allTierConfigs "Nicely" returns object for we need to cast it all to a type we know
+             // Config Ranges are the ranges the values can roll, within every Tier
+             // so we get a list of all ranges, for all the possible tiers at this level
+            List<IntegerAttributeGenerator.Range> ranges = castList(modifierConfig.allTierConfigs());
             IntegerAttributeGenerator gen = new IntegerAttributeGenerator();
+            //Then we use the generator funtions to get minimum and the highest value in the roll
             return new RangedAttribute<Integer>(name, (Integer) value, gen.getMinimumValue(ranges).get(),
                     gen.getMaximumValue(ranges).get());
 
         } else if (value instanceof Float) {
 
-            List<FloatAttributeGenerator.Range> ranges = getRanges(configRange);
+            List<FloatAttributeGenerator.Range> ranges = castList(modifierConfig.allTierConfigs());
             FloatAttributeGenerator gen = new FloatAttributeGenerator();
             return new RangedAttribute<Float>(name, (Float) value, gen.getMinimumValue(ranges).get(),
                     gen.getMaximumValue(ranges).get());
         } else if (value instanceof Double) {
-            List<DoubleAttributeGenerator.Range> ranges = getRanges(configRange);
+            List<DoubleAttributeGenerator.Range> ranges = castList(modifierConfig.allTierConfigs());
             DoubleAttributeGenerator gen = new DoubleAttributeGenerator();
             Double min = gen.getMinimumValue(ranges).get();
             Double max = gen.getMaximumValue(ranges).get();
@@ -95,14 +100,14 @@ public class CCVaultGearAttributeFactory {
         } else if (value instanceof Boolean) {
             return new CCVaultGearAttribute(name);
         } else if (value instanceof ManaPerLootAttribute) {
-            List<ManaPerLootAttribute.Config> ranges = getRanges(configRange);
+            List<ManaPerLootAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
             ManaPerLootAttribute.Generator gen = ManaPerLootAttribute.generator();
             return new CCManaPerLootAttribute("Manabloom", (ManaPerLootAttribute) value,
                     gen.getMinimumValue(ranges).get(),
                     gen.getMaximumValue(ranges).get());
         } else if (value instanceof EffectAvoidanceListGearAttribute) {
             EffectAvoidanceListGearAttribute v = (EffectAvoidanceListGearAttribute) value;
-            List<EffectAvoidanceListGearAttribute.Config> ranges = getRanges(configRange);
+            List<EffectAvoidanceListGearAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
             ConfigurableAttributeGenerator<EffectAvoidanceListGearAttribute, EffectAvoidanceListGearAttribute.Config> gen = EffectAvoidanceListGearAttribute
                     .generator();
             return new RangedAttribute<Float>("Effect Avoidance", v.getChance(),
@@ -110,7 +115,7 @@ public class CCVaultGearAttributeFactory {
                     gen.getMaximumValue(ranges).get().getChance());
         } else if (value instanceof EffectAvoidanceGearAttribute) {
             EffectAvoidanceGearAttribute v = (EffectAvoidanceGearAttribute) value;
-            List<EffectAvoidanceGearAttribute.Config> ranges = getRanges(configRange);
+            List<EffectAvoidanceGearAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
             ConfigurableAttributeGenerator<EffectAvoidanceGearAttribute, EffectAvoidanceGearAttribute.Config> gen = EffectAvoidanceGearAttribute
                     .generator();
             return new RangedAttribute<Float>("Effect Avoidance", v.getChance(),
@@ -118,7 +123,7 @@ public class CCVaultGearAttributeFactory {
                     gen.getMaximumValue(ranges).get().getChance());
         } else if (value instanceof AbilityLevelAttribute) {
             AbilityLevelAttribute v = (AbilityLevelAttribute) value;
-            List<AbilityLevelAttribute.Config> ranges = getRanges(configRange);
+            List<AbilityLevelAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
             ConfigurableAttributeGenerator<AbilityLevelAttribute, AbilityLevelAttribute.Config> gen = AbilityLevelAttribute
                     .generator();
             return new CCAbilityLevelAttribute(v.getAbility(), v.getLevelChange(),
@@ -133,21 +138,23 @@ public class CCVaultGearAttributeFactory {
             HashMap<String, Object> map = new HashMap<>();
             map.put("modifier", modifier.toString());
             map.put("value", value.toString());
-            map.put("configRange", configRange.toString());
+            map.put("configRange", modifierConfig.toString());
             return new DebugAttribute(map);
         }
     }
 
-    private static <T> List<T> getRanges(VaultGearTierConfig.ModifierConfigRange configRange) {
-        return configRange.allTierConfigs().stream()
+
+   
+    private static <T> List<T> castList(List<Object> list) {
+        return list.stream()
                 .map(o -> (T) o).collect(Collectors.toList());
     }
 
-    private static VaultGearTierConfig.ModifierConfigRange getConfigRange(ItemStack stack,
-            VaultGearModifier<?> modifier, VaultGearData data) {
+    private static VaultGearTierConfig.ModifierConfigRange getModifierConfigForLevel(ItemStack stack,
+            VaultGearModifier<?> modifier, int level) {
         VaultGearTierConfig.ModifierConfigRange configRange = (VaultGearTierConfig.ModifierConfigRange) VaultGearTierConfig
                 .getConfig(stack).map((tierCfg) -> {
-                    return tierCfg.getTierConfigRange(modifier, data.getItemLevel());
+                    return tierCfg.getTierConfigRange(modifier, level);
                 }).orElse(ModifierConfigRange.empty());
         return configRange;
     }
