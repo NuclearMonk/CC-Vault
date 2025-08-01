@@ -574,7 +574,21 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         gear.put("Rarity", data.getRarity().getDisplayName().getString());
         gear.put("RepairSlots", getRepair_slots(data));
         gear.put("Durability", getDurability(stack));
-        gear.put("Slot", VaultGearItem.of(stack).getEquipmentSlot(stack).toString());
+        switch (VaultGearItem.of(stack).getGearType(stack)) {
+            case HELMET:
+            case CHESTPLATE:
+            case LEGGINGS:
+            case BOOTS:
+            case WAND:
+            case FOCUS:
+                gear.put("Slot", VaultGearItem.of(stack).getEquipmentSlot(stack).toString());
+
+                break;
+
+            default:
+                break;
+        }
+
         gear.put("PrefixSlots", data.getFirstValue(ModGearAttributes.PREFIXES).get());
         gear.put("SuffixSlots", data.getFirstValue(ModGearAttributes.SUFFIXES).get());
         List<HashMap<String, Object>> attributes = new ArrayList<HashMap<String, Object>>();
@@ -589,11 +603,10 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
                 return;
             } else if (instance.getAttribute().equals(ModGearAttributes.SUFFIXES)) {
                 return;
-            }else if (instance.getAttribute().equals(ModGearAttributes.GEAR_ROLL_TYPE)) {
+            } else if (instance.getAttribute().equals(ModGearAttributes.GEAR_ROLL_TYPE)) {
                 return;
-            }
-            else{
-                attributes.add(CCVaultGearAttributeFactory.parse(stack,instance, data).toLuaTable());
+            } else {
+                attributes.add(CCVaultGearAttributeFactory.parse(stack, instance, data).toLuaTable());
             }
         });
         gear.put("Attributes", attributes);

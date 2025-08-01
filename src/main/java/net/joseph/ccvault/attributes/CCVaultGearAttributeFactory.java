@@ -1,5 +1,6 @@
 package net.joseph.ccvault.attributes;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -13,6 +14,7 @@ import iskallia.vault.config.gear.VaultGearTierConfig.ModifierAffixTagGroup;
 import iskallia.vault.config.gear.VaultGearTierConfig.ModifierConfigRange;
 import iskallia.vault.config.gear.VaultGearTierConfig.ModifierOutcome;
 import iskallia.vault.config.gear.VaultGearTierConfig.ModifierTier;
+import iskallia.vault.effect.PoisonOverrideEffect;
 import iskallia.vault.gear.GearRollHelper;
 import iskallia.vault.gear.attribute.VaultGearAttribute;
 import iskallia.vault.gear.attribute.VaultGearAttributeInstance;
@@ -23,13 +25,17 @@ import iskallia.vault.gear.attribute.config.ConfigurableAttributeGenerator;
 import iskallia.vault.gear.attribute.config.DoubleAttributeGenerator;
 import iskallia.vault.gear.attribute.config.FloatAttributeGenerator;
 import iskallia.vault.gear.attribute.config.IntegerAttributeGenerator;
+import iskallia.vault.gear.attribute.config.IntegerAttributeGenerator.Range;
 import iskallia.vault.gear.attribute.custom.effect.EffectAvoidanceGearAttribute;
 import iskallia.vault.gear.attribute.custom.effect.EffectAvoidanceListGearAttribute;
+import iskallia.vault.gear.attribute.custom.effect.EffectCloudAttribute;
 import iskallia.vault.gear.attribute.custom.effect.EffectAvoidanceListGearAttribute.Config;
+import iskallia.vault.gear.attribute.custom.effect.EffectCloudAttribute.EffectCloud;
 import iskallia.vault.gear.attribute.custom.loot.ManaPerLootAttribute;
 import iskallia.vault.gear.data.VaultGearData;
 import iskallia.vault.gear.item.VaultGearItem;
 import iskallia.vault.gear.reader.IntegerModifierReader;
+import iskallia.vault.gear.reader.VaultGearModifierReader;
 import iskallia.vault.gear.tooltip.VaultGearTooltipItem;
 import iskallia.vault.init.ModConfigs;
 import iskallia.vault.init.ModDynamicModels;
@@ -66,25 +72,21 @@ public class CCVaultGearAttributeFactory {
             }
 
         }
+        VaultGearTierConfig.ModifierConfigRange configRange = getConfigRange(stack, modifier, data);
         if (value instanceof Integer) {
-            VaultGearTierConfig.ModifierConfigRange configRange = getConfigRange(stack, modifier, data);
-            List<IntegerAttributeGenerator.Range> ranges = configRange.allTierConfigs().stream()
-                    .map(o -> (IntegerAttributeGenerator.Range) o).collect(Collectors.toList());
+            List<IntegerAttributeGenerator.Range> ranges = getRanges(configRange);
             IntegerAttributeGenerator gen = new IntegerAttributeGenerator();
             return new RangedAttribute<Integer>(name, (Integer) value, gen.getMinimumValue(ranges).get(),
                     gen.getMaximumValue(ranges).get());
 
         } else if (value instanceof Float) {
-            VaultGearTierConfig.ModifierConfigRange configRange = getConfigRange(stack, modifier, data);
-            List<FloatAttributeGenerator.Range> ranges = configRange.allTierConfigs().stream()
-                    .map(o -> (FloatAttributeGenerator.Range) o).collect(Collectors.toList());
+
+            List<FloatAttributeGenerator.Range> ranges = getRanges(configRange);
             FloatAttributeGenerator gen = new FloatAttributeGenerator();
             return new RangedAttribute<Float>(name, (Float) value, gen.getMinimumValue(ranges).get(),
                     gen.getMaximumValue(ranges).get());
         } else if (value instanceof Double) {
-            VaultGearTierConfig.ModifierConfigRange configRange = getConfigRange(stack, modifier, data);
-            List<DoubleAttributeGenerator.Range> ranges = configRange.allTierConfigs().stream()
-                    .map(o -> (DoubleAttributeGenerator.Range) o).collect(Collectors.toList());
+            List<DoubleAttributeGenerator.Range> ranges = getRanges(configRange);
             DoubleAttributeGenerator gen = new DoubleAttributeGenerator();
             Double min = gen.getMinimumValue(ranges).get();
             Double max = gen.getMaximumValue(ranges).get();
@@ -93,37 +95,52 @@ public class CCVaultGearAttributeFactory {
         } else if (value instanceof Boolean) {
             return new CCVaultGearAttribute(name);
         } else if (value instanceof ManaPerLootAttribute) {
-            VaultGearTierConfig.ModifierConfigRange configRange = getConfigRange(stack, modifier, data);
-            List<ManaPerLootAttribute.Config> ranges = configRange.allTierConfigs().stream()
-                    .map(o -> (ManaPerLootAttribute.Config) o).collect(Collectors.toList());
+            List<ManaPerLootAttribute.Config> ranges = getRanges(configRange);
             ManaPerLootAttribute.Generator gen = ManaPerLootAttribute.generator();
             return new CCManaPerLootAttribute("Manabloom", (ManaPerLootAttribute) value,
                     gen.getMinimumValue(ranges).get(),
                     gen.getMaximumValue(ranges).get());
-        }else if (value instanceof EffectAvoidanceListGearAttribute) {
+        } else if (value instanceof EffectAvoidanceListGearAttribute) {
             EffectAvoidanceListGearAttribute v = (EffectAvoidanceListGearAttribute) value;
-            VaultGearTierConfig.ModifierConfigRange configRange = getConfigRange(stack, modifier, data);
-            List<EffectAvoidanceListGearAttribute.Config> ranges = configRange.allTierConfigs().stream()
-                    .map(o -> (EffectAvoidanceListGearAttribute.Config) o).collect(Collectors.toList());
-            ConfigurableAttributeGenerator<EffectAvoidanceListGearAttribute, EffectAvoidanceListGearAttribute.Config> gen = EffectAvoidanceListGearAttribute.generator();
-            return new RangedAttribute<Float>("Effect Avoidance", v.getChance() , gen.getMinimumValue(ranges).get().getChance(),
+            List<EffectAvoidanceListGearAttribute.Config> ranges = getRanges(configRange);
+            ConfigurableAttributeGenerator<EffectAvoidanceListGearAttribute, EffectAvoidanceListGearAttribute.Config> gen = EffectAvoidanceListGearAttribute
+                    .generator();
+            return new RangedAttribute<Float>("Effect Avoidance", v.getChance(),
+                    gen.getMinimumValue(ranges).get().getChance(),
                     gen.getMaximumValue(ranges).get().getChance());
-        }else if (value instanceof AbilityLevelAttribute) {
+        } else if (value instanceof EffectAvoidanceGearAttribute) {
+            EffectAvoidanceGearAttribute v = (EffectAvoidanceGearAttribute) value;
+            List<EffectAvoidanceGearAttribute.Config> ranges = getRanges(configRange);
+            ConfigurableAttributeGenerator<EffectAvoidanceGearAttribute, EffectAvoidanceGearAttribute.Config> gen = EffectAvoidanceGearAttribute
+                    .generator();
+            return new RangedAttribute<Float>("Effect Avoidance", v.getChance(),
+                    gen.getMinimumValue(ranges).get().getChance(),
+                    gen.getMaximumValue(ranges).get().getChance());
+        } else if (value instanceof AbilityLevelAttribute) {
             AbilityLevelAttribute v = (AbilityLevelAttribute) value;
-            VaultGearTierConfig.ModifierConfigRange configRange = getConfigRange(stack, modifier, data);
-            List<AbilityLevelAttribute.Config> ranges = configRange.allTierConfigs().stream()
-                    .map(o -> (AbilityLevelAttribute.Config) o).collect(Collectors.toList());
-            ConfigurableAttributeGenerator<AbilityLevelAttribute, AbilityLevelAttribute.Config> gen = AbilityLevelAttribute.generator();
-            return new CCAbilityLevelAttribute(v.getAbility(), v.getLevelChange() , gen.getMinimumValue(ranges).get().getLevelChange(),
+            List<AbilityLevelAttribute.Config> ranges = getRanges(configRange);
+            ConfigurableAttributeGenerator<AbilityLevelAttribute, AbilityLevelAttribute.Config> gen = AbilityLevelAttribute
+                    .generator();
+            return new CCAbilityLevelAttribute(v.getAbility(), v.getLevelChange(),
+                    gen.getMinimumValue(ranges).get().getLevelChange(),
                     gen.getMaximumValue(ranges).get().getLevelChange());
+        } else if (value instanceof EffectCloudAttribute) {
+            EffectCloudAttribute v = (EffectCloudAttribute) value;
+            VaultGearModifierReader<EffectCloudAttribute> reader = EffectCloudAttribute.reader(false);
+            return new ValueAttribute<String>("Cloud",
+                    reader.getValueDisplay(v).getString());
         } else {
             HashMap<String, Object> map = new HashMap<>();
             map.put("modifier", modifier.toString());
             map.put("value", value.toString());
-            VaultGearTierConfig.ModifierConfigRange configRange = getConfigRange(stack, modifier, data);
             map.put("configRange", configRange.toString());
             return new DebugAttribute(map);
         }
+    }
+
+    private static <T> List<T> getRanges(VaultGearTierConfig.ModifierConfigRange configRange) {
+        return configRange.allTierConfigs().stream()
+                .map(o -> (T) o).collect(Collectors.toList());
     }
 
     private static VaultGearTierConfig.ModifierConfigRange getConfigRange(ItemStack stack,
@@ -135,7 +152,8 @@ public class CCVaultGearAttributeFactory {
         return configRange;
     }
 
-    public static CCVaultGearAttribute parse(ItemStack stack, VaultGearAttributeInstance instance, VaultGearData data) {
+    public static CCVaultGearAttribute parse(ItemStack stack, VaultGearAttributeInstance<?> instance,
+            VaultGearData data) {
         if (instance.getAttribute().equals(ModGearAttributes.CRAFTING_POTENTIAL)) {
             return new ValueAttribute<Integer>("Crafting Potential", (Integer) instance.getValue());
         } else if (instance.getAttribute().equals(ModGearAttributes.MAX_CRAFTING_POTENTIAL)) {
@@ -151,16 +169,16 @@ public class CCVaultGearAttributeFactory {
             return new ValueAttribute<Integer>("Prefixes", (Integer) instance.getValue());
         } else if (instance.getAttribute().equals(ModGearAttributes.SUFFIXES)) {
             return new ValueAttribute<Integer>("Suffixes", (Integer) instance.getValue());
+        } else if (instance.getAttribute().equals(ModGearAttributes.DURABILITY)) {
+            var t = VaultGearTierConfig.getConfig(stack).get().getModifierGroup(ModifierAffixTagGroup.BASE_ATTRIBUTES)
+                    .stream().filter(a -> a.getAttribute().toString().equals("the_vault:durability"))
+                    .collect(Collectors.toList()).get(0).getModifiersForLevel(data.getItemLevel()).stream()
+                    .map(o -> o.getModifierConfiguration()).collect(Collectors.toList());
+            return new RangedAttribute<Integer>("Durabilty", (Integer) instance.getValue(),
+                    (Integer) instance.getAttribute().getGenerator().getMinimumValue(t).get(),
+                    (Integer) instance.getAttribute().getGenerator().getMaximumValue(t).get());
         }
-        else if (instance.getAttribute().equals(ModGearAttributes.DURABILITY)) {
-            // VaultGearTierConfig.ModifierTier
-            var t = VaultGearTierConfig.getConfig(stack).get().getModifierGroup(ModifierAffixTagGroup.BASE_ATTRIBUTES).stream().filter(a->a.getAttribute().toString().equals("the_vault:durability")).collect(Collectors.toList()).get(0).getModifiersForLevel(data.getItemLevel()).stream().map(o ->o.getModifierConfiguration()).collect(Collectors.toList());
-            
-            // t.get(0).getModifierConfiguration()
-            return new RangedAttribute<Integer>("Durabilty",(Integer)instance.getValue(),(Integer)instance.getAttribute().getGenerator().getMinimumValue(t).get(), (Integer)instance.getAttribute().getGenerator().getMaximumValue(t).get());
-            //return new ValueAttribute<Integer>("Suffixes", (Integer) instance.getValue());
-        }
-        
+
         if (instance.getValue() instanceof Boolean) {
             return new CCVaultGearAttribute(instance.getAttribute().getReader().getModifierName());
         } else if (instance.getValue() instanceof Integer) {
