@@ -2,14 +2,20 @@ package net.joseph.ccvault.attributes;
 
 import java.util.HashMap;
 
-public class DoubleAffixAttribute extends AffixAttribute {
-    Double value;
-    Double min;
-    Double max;
+public class RangedAttribute<T> extends ValueAttribute<T> {
+    T min;
+    T max;
 
-    public DoubleAffixAttribute(String name, Double value, Double min, Double max) {
-        super(name);
-        this.value = value;
+    public T getMin() {
+        return min;
+    }
+
+    public T getMax() {
+        return max;
+    }
+
+    public RangedAttribute(String name, T value, T min, T max) {
+        super(name, value);
         this.min = min;
         this.max = max;
     }
@@ -17,7 +23,6 @@ public class DoubleAffixAttribute extends AffixAttribute {
     @Override
     public HashMap<String, Object> toLuaTable() {
         HashMap<String, Object> map = super.toLuaTable();
-        map.put("value", this.value);
         map.put("min", this.min);
         map.put("max", this.max);
         return map;

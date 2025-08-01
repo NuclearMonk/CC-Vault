@@ -4,10 +4,14 @@ import java.util.HashMap;
 
 import net.joseph.ccvault.interfaces.ILuaTable;
 
-public class AffixAttribute implements ILuaTable{
+public class CCVaultGearAttribute implements ILuaTable{
     private String name;
 
-    protected AffixAttribute(String name){
+    public String getName() {
+        return name;
+    }
+
+    protected CCVaultGearAttribute(String name){
         this.name = name;
     }
 

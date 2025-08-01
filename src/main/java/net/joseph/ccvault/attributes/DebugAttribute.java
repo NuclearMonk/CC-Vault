@@ -2,10 +2,10 @@ package net.joseph.ccvault.attributes;
 
 import java.util.HashMap;
 
-public class DebugAffixAttribute extends AffixAttribute {
+public class DebugAttribute extends CCVaultGearAttribute {
     Object data;    
 
-    public DebugAffixAttribute(Object data){
+    public DebugAttribute(Object data){
         super("debug");
         this.data = data;
     }

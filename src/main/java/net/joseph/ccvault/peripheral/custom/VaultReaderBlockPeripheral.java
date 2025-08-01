@@ -2,14 +2,18 @@ package net.joseph.ccvault.peripheral.custom;
 
 import static net.joseph.ccvault.peripheral.Methods.assertBetween;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
+
+import org.apache.commons.lang3.ObjectUtils;
 
 import dan200.computercraft.api.detail.DetailRegistries;
 import dan200.computercraft.api.lua.LuaException;
@@ -17,11 +21,15 @@ import dan200.computercraft.api.lua.LuaFunction;
 import dan200.computercraft.api.peripheral.IComputerAccess;
 import dan200.computercraft.api.peripheral.IPeripheral;
 import iskallia.vault.config.gear.VaultGearTierConfig;
+import iskallia.vault.gear.VaultGearRarity;
+import iskallia.vault.gear.attribute.VaultGearAttribute;
 import iskallia.vault.gear.attribute.VaultGearModifier;
 import iskallia.vault.gear.attribute.VaultGearModifier.AffixType;
 import iskallia.vault.gear.attribute.config.ConfigurableAttributeGenerator;
 import iskallia.vault.gear.data.VaultGearData;
 import iskallia.vault.gear.item.VaultGearItem;
+import iskallia.vault.init.ModConfigs;
+import iskallia.vault.init.ModDynamicModels;
 import iskallia.vault.init.ModGearAttributes;
 import iskallia.vault.item.InfusedCatalystItem;
 import iskallia.vault.item.InscriptionItem;
@@ -30,19 +38,23 @@ import iskallia.vault.item.gear.CharmItem;
 import iskallia.vault.item.gear.TrinketItem;
 import iskallia.vault.item.tool.JewelItem;
 import iskallia.vault.item.tool.ToolItem;
-import net.joseph.ccvault.attributes.AffixAttributeFactory;
+import net.joseph.ccvault.attributes.CCVaultGearAttribute;
+import net.joseph.ccvault.attributes.CCVaultGearAttributeFactory;
+import net.joseph.ccvault.attributes.ValueAttribute;
 import net.joseph.ccvault.blockEntity.custom.VaultReaderBlockEntity;
 import net.joseph.ccvault.peripheral.TweakedPeripheral;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
@@ -321,7 +333,6 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
 
         if (affixes.size() > index) {
             VaultGearModifier affix = affixes.get(index);
-
             MutableComponent component = (MutableComponent) getDisplay(affix, data, type, stack, displayDetail).get();
             return component.getString();
         }
@@ -528,34 +539,95 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
             case "Jewel":
                 return getJewelDetails(stack);
             case "Gear":
-                return getJewelDetails(stack);
+                return getGearDetails(stack);
             default:
                 break;
         }
         return null;
     }
 
-    private Object getJewelDetails(ItemStack stack)
-    // private HashMap<String, Object> getJewelDetails(ItemStack stack)
-    {
+    private HashMap<String, Object> getJewelDetails(ItemStack stack) {
 
         VaultGearData data = VaultGearData.read(stack);
         HashMap<String, Object> jewel = new HashMap<>();
         jewel.put("Level", data.getItemLevel());
         List<HashMap<String, Object>> implicits = data.getModifiers(AffixType.IMPLICIT).stream()
-                .map(modifier -> AffixAttributeFactory.parse(stack, modifier).toLuaTable())
+                .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
                 .collect(Collectors.toList());
         jewel.put("Implicits", implicits);
         List<HashMap<String, Object>> prefixes = data.getModifiers(AffixType.PREFIX).stream()
-                .map(modifier -> AffixAttributeFactory.parse(stack, modifier).toLuaTable())
+                .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
                 .collect(Collectors.toList());
         jewel.put("Prefixes", prefixes);
         List<HashMap<String, Object>> suffixes = data.getModifiers(AffixType.SUFFIX).stream()
-                .map(modifier -> AffixAttributeFactory.parse(stack, modifier).toLuaTable())
+                .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
                 .collect(Collectors.toList());
         jewel.put("Suffixes", suffixes);
         return jewel;
 
+    }
+
+    private HashMap<String, Object> getGearDetails(ItemStack stack) {
+        VaultGearData data = VaultGearData.read(stack);
+        HashMap<String, Object> gear = new HashMap<>();
+        gear.put("Level", data.getItemLevel());
+        gear.put("Rarity", data.getRarity().getDisplayName().getString());
+        gear.put("RepairSlots", getRepair_slots(data));
+        gear.put("Durability", getDurability(stack));
+        gear.put("Slot", VaultGearItem.of(stack).getEquipmentSlot(stack).toString());
+        gear.put("PrefixSlots", data.getFirstValue(ModGearAttributes.PREFIXES).get());
+        gear.put("SuffixSlots", data.getFirstValue(ModGearAttributes.SUFFIXES).get());
+        List<HashMap<String, Object>> attributes = new ArrayList<HashMap<String, Object>>();
+        data.getAttributes().forEach(instance -> {
+            if (instance.getAttribute().equals(ModGearAttributes.CRAFTING_POTENTIAL)) {
+                return;
+            } else if (instance.getAttribute().equals(ModGearAttributes.MAX_CRAFTING_POTENTIAL)) {
+                return;
+            } else if (instance.getAttribute().equals(ModGearAttributes.GEAR_MODEL)) {
+                return;
+            } else if (instance.getAttribute().equals(ModGearAttributes.PREFIXES)) {
+                return;
+            } else if (instance.getAttribute().equals(ModGearAttributes.SUFFIXES)) {
+                return;
+            }else if (instance.getAttribute().equals(ModGearAttributes.GEAR_ROLL_TYPE)) {
+                return;
+            }
+            else{
+                attributes.add(CCVaultGearAttributeFactory.parse(stack,instance, data).toLuaTable());
+            }
+        });
+        gear.put("Attributes", attributes);
+        List<HashMap<String, Object>> implicits = data.getModifiers(AffixType.IMPLICIT).stream()
+                .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
+                .collect(Collectors.toList());
+        gear.put("Implicits", implicits);
+        List<HashMap<String, Object>> prefixes = data.getModifiers(AffixType.PREFIX).stream()
+                .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
+                .collect(Collectors.toList());
+        gear.put("Prefixes", prefixes);
+        List<HashMap<String, Object>> suffixes = data.getModifiers(AffixType.SUFFIX).stream()
+                .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
+                .collect(Collectors.toList());
+
+        gear.put("Suffixes", suffixes);
+        return gear;
+
+    }
+
+    private HashMap<String, Integer> getDurability(ItemStack stack) {
+        HashMap<String, Integer> durability = new HashMap<>();
+        int maxDurability = VaultGearItem.of(stack).getMaxDamage(stack);
+        durability.put("Total", maxDurability);
+        int current_durability = maxDurability - VaultGearItem.of(stack).getDamage(stack);
+        durability.put("Current", current_durability);
+        return durability;
+    }
+
+    private HashMap<String, Integer> getRepair_slots(VaultGearData data) {
+        HashMap<String, Integer> repair_slots = new HashMap<>();
+        repair_slots.put("Total", data.getRepairSlots());
+        repair_slots.put("Used", data.getUsedRepairSlots());
+        return repair_slots;
     }
 
     @LuaFunction
