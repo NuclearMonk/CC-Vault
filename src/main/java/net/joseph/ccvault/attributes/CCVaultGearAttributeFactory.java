@@ -60,40 +60,45 @@ public class CCVaultGearAttributeFactory {
         // However if ignoreJewelSize is set we can follow the normal rout for integer
         // modifires
         // ( ͡° ͜ʖ ͡°)
-        if (name.equals("Size")) {
-            CompoundTag tag = stack.getOrCreateTag();
-            if (!tag.contains("ignoreJewelSize") || !tag.getBoolean("ignoreJewelSize")) {
-                Optional<IntRangeEntry> range = ModConfigs.JEWEL_SIZE.getSize(data.getRarity());
-                if (range.isPresent()) {
-                    return new RangedAttribute<Integer>(name, 1, (Integer) value, range.get().getMin(),
-                            range.get().getMax());
-                }
-                ;
-            }
+        // if (name.equals("Size")) {
+        //     CompoundTag tag = stack.getOrCreateTag();
+        //     if (!tag.contains("ignoreJewelSize") || !tag.getBoolean("ignoreJewelSize")) {
+        //         Optional<IntRangeEntry> range = ModConfigs.JEWEL_SIZE.getSize(data.getRarity());
+        //         if (range.isPresent()) {
+        //             return new RangedAttribute<Integer>(name, 1, (Integer) value, range.get().getMin(),
+        //                     range.get().getMax());
+        //         }
+        //         ;
+        //     }
 
-        }
-        // Configs are generally split by level and by roll tiers, so we query by level
-        VaultGearTierConfig.ModifierConfigRange modifierConfig = getModifierConfigForLevel(stack, modifier,
-                data.getItemLevel());
-        List<Object> allTierConfigs = modifierConfig.allTierConfigs();
+        // }
 
         // while we are at it we can also get the tier, since tiers are 0 indexed in
         // code but 1 indexed in the client,
         // we just correct for that so it matches what players can read with their
         // eyeballs
+
         int tier = modifier.getRolledTier() + 1;
+        VaultGearTierConfig.ModifierConfigRange modifierConfig = null;
+        List<Object> allTierConfigs = null;
+        if (tier != 0){
+            modifierConfig = getModifierConfigForLevel(stack, modifier,
+            data.getItemLevel());
+            allTierConfigs= modifierConfig.allTierConfigs();
+        }
+
 
         if (value instanceof Integer) {
-            // Since allTierConfigs "Nicely" returns object for we need to cast it all to a
-            // type we know
-            // Config Ranges are the ranges the values can roll, within every Tier
-            // so we get a list of all ranges, for all the possible tiers at this level
-            List<IntegerAttributeGenerator.Range> ranges = castList(modifierConfig.allTierConfigs());
-            IntegerAttributeGenerator gen = new IntegerAttributeGenerator();
-            // Then we use the generator funtions to get minimum and the highest value in
-            // the roll
-            return new RangedAttribute<Integer>(name, tier, (Integer) value, gen.getMinimumValue(ranges).get(),
-                    gen.getMaximumValue(ranges).get());
+            if (tier != 0){
+                List<IntegerAttributeGenerator.Range> ranges = castList(modifierConfig.allTierConfigs());
+                IntegerAttributeGenerator gen = new IntegerAttributeGenerator();
+                // Then we use the generator funtions to get minimum and the highest value in
+                // the roll
+                return new RangedAttribute<Integer>(name, tier, (Integer) value, gen.getMinimumValue(ranges).get(),
+                        gen.getMaximumValue(ranges).get());
+            }
+            return new ValueAttribute<Integer>(name, (Integer) value);
+
 
         } else if (value instanceof Float) {
             if (allTierConfigs != null) {
