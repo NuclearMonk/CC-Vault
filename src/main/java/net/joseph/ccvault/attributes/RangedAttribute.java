@@ -2,7 +2,7 @@ package net.joseph.ccvault.attributes;
 
 import java.util.HashMap;
 
-public class RangedAttribute<T> extends ValueAttribute<T> {
+public class RangedAttribute<T> extends TieredValueAttribute<T> {
     T min;
     T max;
 
@@ -14,8 +14,8 @@ public class RangedAttribute<T> extends ValueAttribute<T> {
         return max;
     }
 
-    public RangedAttribute(String name, T value, T min, T max) {
-        super(name, value);
+    public RangedAttribute(String name,int tier, T value, T min, T max) {
+        super(name,tier, value);
         this.min = min;
         this.max = max;
     }

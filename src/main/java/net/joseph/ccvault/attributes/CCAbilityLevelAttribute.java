@@ -4,8 +4,8 @@ import java.util.HashMap;
 
 public class CCAbilityLevelAttribute  extends RangedAttribute<Integer>{
     private String ability;
-    public CCAbilityLevelAttribute(String ability , Integer value, Integer min, Integer max) {
-        super("Ability", value, min, max);
+    public CCAbilityLevelAttribute(String ability,int tier , Integer value, Integer min, Integer max) {
+        super("Ability",tier, value, min, max);
         this.ability= ability;
     }
     @Override

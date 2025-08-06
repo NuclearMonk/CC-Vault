@@ -4,26 +4,30 @@ import java.util.HashMap;
 
 import iskallia.vault.gear.attribute.custom.loot.ManaPerLootAttribute;
 
-public class CCManaPerLootAttribute extends RangedAttribute<ManaPerLootAttribute>{
+public class CCManaPerLootAttribute extends CCVaultGearAttribute{
     
+    ManaPerLootAttribute value;
 
-
-    protected CCManaPerLootAttribute(String name, ManaPerLootAttribute value, ManaPerLootAttribute min, ManaPerLootAttribute max) {
-        super(name, value, min, max);
+    protected CCManaPerLootAttribute(ManaPerLootAttribute value) {
+        super("Manabloom");
+        this.value = value;
     }
 
-    @Override
-    public HashMap<String, Object> toLuaTable() {
-        HashMap<String, Object> map = super.toLuaTable();
-        map.put("min", toLuaTable(this.min));
-        map.put("max", toLuaTable(this.max));
-        return map;
-    }
+    
     
     public HashMap<String, Object> toLuaTable(ManaPerLootAttribute attr) {
         HashMap<String, Object> map = new HashMap<>();
         map.put("Mana", attr.getManaGenerated());
         map.put("Chance", attr.getManaGenerationChance());
+        return map;
+    }
+
+
+
+    @Override
+    public HashMap<String, Object> toLuaTable() {
+        HashMap<String, Object> map =  super.toLuaTable();
+        map.put("value", this.toLuaTable(value));
         return map;
     }
 }

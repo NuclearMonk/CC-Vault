@@ -8,12 +8,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.lang3.ObjectUtils;
+import org.stringtemplate.v4.compiler.CodeGenerator.region_return;
 
 import dan200.computercraft.api.detail.DetailRegistries;
 import dan200.computercraft.api.lua.LuaException;
@@ -21,15 +20,15 @@ import dan200.computercraft.api.lua.LuaFunction;
 import dan200.computercraft.api.peripheral.IComputerAccess;
 import dan200.computercraft.api.peripheral.IPeripheral;
 import iskallia.vault.config.gear.VaultGearTierConfig;
-import iskallia.vault.gear.VaultGearRarity;
 import iskallia.vault.gear.attribute.VaultGearAttribute;
+import iskallia.vault.gear.attribute.VaultGearAttributeInstance;
 import iskallia.vault.gear.attribute.VaultGearModifier;
 import iskallia.vault.gear.attribute.VaultGearModifier.AffixType;
 import iskallia.vault.gear.attribute.config.ConfigurableAttributeGenerator;
+import iskallia.vault.gear.attribute.config.IntegerAttributeGenerator;
+import iskallia.vault.gear.data.ToolGearData;
 import iskallia.vault.gear.data.VaultGearData;
 import iskallia.vault.gear.item.VaultGearItem;
-import iskallia.vault.init.ModConfigs;
-import iskallia.vault.init.ModDynamicModels;
 import iskallia.vault.init.ModGearAttributes;
 import iskallia.vault.item.InfusedCatalystItem;
 import iskallia.vault.item.InscriptionItem;
@@ -40,6 +39,7 @@ import iskallia.vault.item.tool.JewelItem;
 import iskallia.vault.item.tool.ToolItem;
 import net.joseph.ccvault.attributes.CCVaultGearAttribute;
 import net.joseph.ccvault.attributes.CCVaultGearAttributeFactory;
+import net.joseph.ccvault.attributes.DebugAttribute;
 import net.joseph.ccvault.attributes.ValueAttribute;
 import net.joseph.ccvault.blockEntity.custom.VaultReaderBlockEntity;
 import net.joseph.ccvault.peripheral.TweakedPeripheral;
@@ -47,14 +47,12 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
@@ -540,6 +538,8 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
                 return getJewelDetails(stack);
             case "Gear":
                 return getGearDetails(stack);
+            case "Tool":
+                return getToolDetails(stack);
             default:
                 break;
         }
@@ -588,9 +588,9 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
             default:
                 break;
         }
-
         gear.put("PrefixSlots", data.getFirstValue(ModGearAttributes.PREFIXES).get());
         gear.put("SuffixSlots", data.getFirstValue(ModGearAttributes.SUFFIXES).get());
+        gear.put("CraftingPotential", getCraftingPotential(data));
         List<HashMap<String, Object>> attributes = new ArrayList<HashMap<String, Object>>();
         data.getAttributes().forEach(instance -> {
             if (instance.getAttribute().equals(ModGearAttributes.CRAFTING_POTENTIAL)) {
@@ -627,6 +627,25 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
 
     }
 
+    private HashMap<String, Object> getToolDetails(ItemStack stack) {
+        VaultGearData data = VaultGearData.read(stack);
+        HashMap<String, Object> gear = new HashMap<>();
+        gear.put("Level", data.getItemLevel());
+        gear.put("Rarity", data.getRarity().getDisplayName().getString());
+        gear.put("RepairSlots", getRepair_slots(data));
+        gear.put("Durability", getDurability(stack));
+        List<HashMap<String, Object>> prefixes = data.getModifiers(AffixType.PREFIX).stream()
+                .map(modifier ->  CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
+                .collect(Collectors.toList());
+        gear.put("Prefixes", prefixes);
+        List<HashMap<String, Object>> suffixes = data.getModifiers(AffixType.SUFFIX).stream()
+                .map(modifier ->  CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
+                .collect(Collectors.toList());
+        gear.put("Suffixes", suffixes);
+        return gear;
+
+    }
+
     private HashMap<String, Integer> getDurability(ItemStack stack) {
         HashMap<String, Integer> durability = new HashMap<>();
         int maxDurability = VaultGearItem.of(stack).getMaxDamage(stack);
@@ -634,6 +653,15 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         int current_durability = maxDurability - VaultGearItem.of(stack).getDamage(stack);
         durability.put("Current", current_durability);
         return durability;
+    }
+
+    private HashMap<String, Integer> getCraftingPotential(VaultGearData data) {
+        HashMap<String, Integer> craft_potential = new HashMap<>();
+        int potential = data.getFirstValue(ModGearAttributes.CRAFTING_POTENTIAL).get();
+        int max_potential = data.getFirstValue(ModGearAttributes.MAX_CRAFTING_POTENTIAL).get();
+        craft_potential.put("Max", max_potential);
+        craft_potential.put("Current", potential);
+        return craft_potential;
     }
 
     private HashMap<String, Integer> getRepair_slots(VaultGearData data) {

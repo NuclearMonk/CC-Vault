@@ -65,7 +65,7 @@ public class CCVaultGearAttributeFactory {
             if (!tag.contains("ignoreJewelSize") || !tag.getBoolean("ignoreJewelSize")) {
                 Optional<IntRangeEntry> range = ModConfigs.JEWEL_SIZE.getSize(data.getRarity());
                 if (range.isPresent()) {
-                    return new RangedAttribute<Integer>(name, (Integer) value, range.get().getMin(),
+                    return new RangedAttribute<Integer>(name, 1, (Integer) value, range.get().getMin(),
                             range.get().getMax());
                 }
                 ;
@@ -73,44 +73,61 @@ public class CCVaultGearAttributeFactory {
 
         }
         // Configs are generally split by level and by roll tiers, so we query by level
-        VaultGearTierConfig.ModifierConfigRange modifierConfig = getModifierConfigForLevel(stack, modifier, data.getItemLevel());
+        VaultGearTierConfig.ModifierConfigRange modifierConfig = getModifierConfigForLevel(stack, modifier,
+                data.getItemLevel());
+        List<Object> allTierConfigs = modifierConfig.allTierConfigs();
+
+        // while we are at it we can also get the tier, since tiers are 0 indexed in
+        // code but 1 indexed in the client,
+        // we just correct for that so it matches what players can read with their
+        // eyeballs
+        int tier = modifier.getRolledTier() + 1;
+
         if (value instanceof Integer) {
-             //Since allTierConfigs "Nicely" returns object for we need to cast it all to a type we know
-             // Config Ranges are the ranges the values can roll, within every Tier
-             // so we get a list of all ranges, for all the possible tiers at this level
+            // Since allTierConfigs "Nicely" returns object for we need to cast it all to a
+            // type we know
+            // Config Ranges are the ranges the values can roll, within every Tier
+            // so we get a list of all ranges, for all the possible tiers at this level
             List<IntegerAttributeGenerator.Range> ranges = castList(modifierConfig.allTierConfigs());
             IntegerAttributeGenerator gen = new IntegerAttributeGenerator();
-            //Then we use the generator funtions to get minimum and the highest value in the roll
-            return new RangedAttribute<Integer>(name, (Integer) value, gen.getMinimumValue(ranges).get(),
+            // Then we use the generator funtions to get minimum and the highest value in
+            // the roll
+            return new RangedAttribute<Integer>(name, tier, (Integer) value, gen.getMinimumValue(ranges).get(),
                     gen.getMaximumValue(ranges).get());
 
         } else if (value instanceof Float) {
-
-            List<FloatAttributeGenerator.Range> ranges = castList(modifierConfig.allTierConfigs());
-            FloatAttributeGenerator gen = new FloatAttributeGenerator();
-            return new RangedAttribute<Float>(name, (Float) value, gen.getMinimumValue(ranges).get(),
-                    gen.getMaximumValue(ranges).get());
+            if (allTierConfigs != null) {
+                List<FloatAttributeGenerator.Range> ranges = castList(allTierConfigs);
+                FloatAttributeGenerator gen = new FloatAttributeGenerator();
+                return new RangedAttribute<Float>(name, tier, (Float) value, gen.getMinimumValue(ranges).get(),
+                        gen.getMaximumValue(ranges).get());
+            }
+            return new ValueAttribute<Float>(name, (Float) value);
         } else if (value instanceof Double) {
             List<DoubleAttributeGenerator.Range> ranges = castList(modifierConfig.allTierConfigs());
             DoubleAttributeGenerator gen = new DoubleAttributeGenerator();
             Double min = gen.getMinimumValue(ranges).get();
             Double max = gen.getMaximumValue(ranges).get();
-            return new RangedAttribute<Double>(name, (Double) value, min, max);
+            return new RangedAttribute<Double>(name, tier, (Double) value, min, max);
 
         } else if (value instanceof Boolean) {
             return new CCVaultGearAttribute(name);
         } else if (value instanceof ManaPerLootAttribute) {
-            List<ManaPerLootAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
-            ManaPerLootAttribute.Generator gen = ManaPerLootAttribute.generator();
-            return new CCManaPerLootAttribute("Manabloom", (ManaPerLootAttribute) value,
-                    gen.getMinimumValue(ranges).get(),
-                    gen.getMaximumValue(ranges).get());
+
+            if (allTierConfigs != null) {
+                List<ManaPerLootAttribute.Config> ranges = castList(allTierConfigs);
+                ManaPerLootAttribute.Generator gen = ManaPerLootAttribute.generator();
+                return new RangedManaPerLootAttribute(tier, (ManaPerLootAttribute) value,
+                        gen.getMinimumValue(ranges).get(),
+                        gen.getMaximumValue(ranges).get());
+            }
+            return new CCManaPerLootAttribute((ManaPerLootAttribute)value);
         } else if (value instanceof EffectAvoidanceListGearAttribute) {
             EffectAvoidanceListGearAttribute v = (EffectAvoidanceListGearAttribute) value;
             List<EffectAvoidanceListGearAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
             ConfigurableAttributeGenerator<EffectAvoidanceListGearAttribute, EffectAvoidanceListGearAttribute.Config> gen = EffectAvoidanceListGearAttribute
                     .generator();
-            return new RangedAttribute<Float>("Effect Avoidance", v.getChance(),
+            return new RangedAttribute<Float>("Effect Avoidance", tier, v.getChance(),
                     gen.getMinimumValue(ranges).get().getChance(),
                     gen.getMaximumValue(ranges).get().getChance());
         } else if (value instanceof EffectAvoidanceGearAttribute) {
@@ -118,7 +135,7 @@ public class CCVaultGearAttributeFactory {
             List<EffectAvoidanceGearAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
             ConfigurableAttributeGenerator<EffectAvoidanceGearAttribute, EffectAvoidanceGearAttribute.Config> gen = EffectAvoidanceGearAttribute
                     .generator();
-            return new RangedAttribute<Float>("Effect Avoidance", v.getChance(),
+            return new RangedAttribute<Float>("Effect Avoidance", tier, v.getChance(),
                     gen.getMinimumValue(ranges).get().getChance(),
                     gen.getMaximumValue(ranges).get().getChance());
         } else if (value instanceof AbilityLevelAttribute) {
@@ -126,13 +143,13 @@ public class CCVaultGearAttributeFactory {
             List<AbilityLevelAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
             ConfigurableAttributeGenerator<AbilityLevelAttribute, AbilityLevelAttribute.Config> gen = AbilityLevelAttribute
                     .generator();
-            return new CCAbilityLevelAttribute(v.getAbility(), v.getLevelChange(),
+            return new CCAbilityLevelAttribute(v.getAbility(), tier, v.getLevelChange(),
                     gen.getMinimumValue(ranges).get().getLevelChange(),
                     gen.getMaximumValue(ranges).get().getLevelChange());
         } else if (value instanceof EffectCloudAttribute) {
             EffectCloudAttribute v = (EffectCloudAttribute) value;
             VaultGearModifierReader<EffectCloudAttribute> reader = EffectCloudAttribute.reader(false);
-            return new ValueAttribute<String>("Cloud",
+            return new TieredValueAttribute<String>("Cloud", tier,
                     reader.getValueDisplay(v).getString());
         } else {
             HashMap<String, Object> map = new HashMap<>();
@@ -143,8 +160,6 @@ public class CCVaultGearAttributeFactory {
         }
     }
 
-
-   
     private static <T> List<T> castList(List<Object> list) {
         return list.stream()
                 .map(o -> (T) o).collect(Collectors.toList());
@@ -161,6 +176,7 @@ public class CCVaultGearAttributeFactory {
 
     public static CCVaultGearAttribute parse(ItemStack stack, VaultGearAttributeInstance<?> instance,
             VaultGearData data) {
+
         if (instance.getAttribute().equals(ModGearAttributes.CRAFTING_POTENTIAL)) {
             return new ValueAttribute<Integer>("Crafting Potential", (Integer) instance.getValue());
         } else if (instance.getAttribute().equals(ModGearAttributes.MAX_CRAFTING_POTENTIAL)) {
@@ -176,28 +192,8 @@ public class CCVaultGearAttributeFactory {
             return new ValueAttribute<Integer>("Prefixes", (Integer) instance.getValue());
         } else if (instance.getAttribute().equals(ModGearAttributes.SUFFIXES)) {
             return new ValueAttribute<Integer>("Suffixes", (Integer) instance.getValue());
-        } else if (instance.getAttribute().equals(ModGearAttributes.DURABILITY)) {
-            var t = VaultGearTierConfig.getConfig(stack).get().getModifierGroup(ModifierAffixTagGroup.BASE_ATTRIBUTES)
-                    .stream().filter(a -> a.getAttribute().toString().equals("the_vault:durability"))
-                    .collect(Collectors.toList()).get(0).getModifiersForLevel(data.getItemLevel()).stream()
-                    .map(o -> o.getModifierConfiguration()).collect(Collectors.toList());
-            return new RangedAttribute<Integer>("Durabilty", (Integer) instance.getValue(),
-                    (Integer) instance.getAttribute().getGenerator().getMinimumValue(t).get(),
-                    (Integer) instance.getAttribute().getGenerator().getMaximumValue(t).get());
         }
-
-        if (instance.getValue() instanceof Boolean) {
-            return new CCVaultGearAttribute(instance.getAttribute().getReader().getModifierName());
-        } else if (instance.getValue() instanceof Integer) {
-            return new ValueAttribute<Integer>(instance.getAttribute().getReader().getModifierName(),
-                    (Integer) instance.getValue());
-        } else if (instance.getValue() instanceof Float) {
-            return new ValueAttribute<Float>(instance.getAttribute().getReader().getModifierName(),
-                    (Float) instance.getValue());
-        } else if (instance.getValue() instanceof Double) {
-            return new ValueAttribute<Double>(instance.getAttribute().getReader().getModifierName(),
-                    (Double) instance.getValue());
-        }
-        return new DebugAttribute(instance.toString());
+        // yes this is a stupid unsafe down cast, but it just works so no touching
+        return parse(stack, (VaultGearModifier<?>) instance);
     }
 }

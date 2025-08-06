@@ -7,7 +7,7 @@ public class ValueAttribute<T> extends CCVaultGearAttribute {
     public T getValue() {
         return value;
     }
-    protected ValueAttribute(String name, T value) {
+    public ValueAttribute(String name, T value) {
         super(name);
         this.value = value;
     }

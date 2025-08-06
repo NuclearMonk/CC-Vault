@@ -6,12 +6,11 @@ import net.joseph.ccvault.interfaces.ILuaTable;
 
 public class CCVaultGearAttribute implements ILuaTable{
     private String name;
-
     public String getName() {
         return name;
     }
 
-    protected CCVaultGearAttribute(String name){
+    public CCVaultGearAttribute(String name){
         this.name = name;
     }
 
