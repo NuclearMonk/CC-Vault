@@ -12,21 +12,16 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import org.stringtemplate.v4.compiler.CodeGenerator.region_return;
-
 import dan200.computercraft.api.detail.DetailRegistries;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
 import dan200.computercraft.api.peripheral.IComputerAccess;
 import dan200.computercraft.api.peripheral.IPeripheral;
 import iskallia.vault.config.gear.VaultGearTierConfig;
-import iskallia.vault.gear.attribute.VaultGearAttribute;
-import iskallia.vault.gear.attribute.VaultGearAttributeInstance;
+import iskallia.vault.gear.VaultGearState;
 import iskallia.vault.gear.attribute.VaultGearModifier;
 import iskallia.vault.gear.attribute.VaultGearModifier.AffixType;
 import iskallia.vault.gear.attribute.config.ConfigurableAttributeGenerator;
-import iskallia.vault.gear.attribute.config.IntegerAttributeGenerator;
-import iskallia.vault.gear.data.ToolGearData;
 import iskallia.vault.gear.data.VaultGearData;
 import iskallia.vault.gear.item.VaultGearItem;
 import iskallia.vault.init.ModGearAttributes;
@@ -37,10 +32,7 @@ import iskallia.vault.item.gear.CharmItem;
 import iskallia.vault.item.gear.TrinketItem;
 import iskallia.vault.item.tool.JewelItem;
 import iskallia.vault.item.tool.ToolItem;
-import net.joseph.ccvault.attributes.CCVaultGearAttribute;
 import net.joseph.ccvault.attributes.CCVaultGearAttributeFactory;
-import net.joseph.ccvault.attributes.DebugAttribute;
-import net.joseph.ccvault.attributes.ValueAttribute;
 import net.joseph.ccvault.blockEntity.custom.VaultReaderBlockEntity;
 import net.joseph.ccvault.peripheral.TweakedPeripheral;
 import net.minecraft.ChatFormatting;
@@ -572,6 +564,20 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         HashMap<String, Object> gear = new HashMap<>();
         gear.put("Level", data.getItemLevel());
         gear.put("Rarity", data.getRarity().getDisplayName().getString());
+        
+        // Return early in case the gear isn't identified as there is no more data to be read
+        switch (data.getState()) {
+            case UNIDENTIFIED:
+            case ROLLING:
+            gear.put("Identified", false);
+            return gear;
+            default:
+                gear.put("Identified", true);
+
+                break;
+        }
+
+        gear.put("Identified", true);
         gear.put("RepairSlots", getRepair_slots(data));
         gear.put("Durability", getDurability(stack));
         switch (VaultGearItem.of(stack).getGearType(stack)) {
@@ -582,7 +588,6 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
             case WAND:
             case FOCUS:
                 gear.put("Slot", VaultGearItem.of(stack).getEquipmentSlot(stack).toString());
-
                 break;
 
             default:

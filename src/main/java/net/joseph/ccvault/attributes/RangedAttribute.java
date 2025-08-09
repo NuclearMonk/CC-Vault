@@ -2,6 +2,8 @@ package net.joseph.ccvault.attributes;
 
 import java.util.HashMap;
 
+import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
+
 public class RangedAttribute<T> extends TieredValueAttribute<T> {
     T min;
     T max;
@@ -14,8 +16,8 @@ public class RangedAttribute<T> extends TieredValueAttribute<T> {
         return max;
     }
 
-    public RangedAttribute(String name,int tier, T value, T min, T max) {
-        super(name,tier, value);
+    public RangedAttribute(String name,int tier, T value, T min, T max, AffixCategorySet categories) {
+        super(name,tier, value, categories);
         this.min = min;
         this.max = max;
     }

@@ -2,11 +2,13 @@ package net.joseph.ccvault.attributes;
 
 import java.util.HashMap;
 
+import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
+
 public class TieredValueAttribute<T> extends ValueAttribute<T>{
     protected int tier;
 
-    protected TieredValueAttribute(String name, int tier, T value) {
-        super(name,value);
+    protected TieredValueAttribute(String name, int tier, T value, AffixCategorySet categories) {
+        super(name,value, categories);
         this.tier = tier;
     }
 

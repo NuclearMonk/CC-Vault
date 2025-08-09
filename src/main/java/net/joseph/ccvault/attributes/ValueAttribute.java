@@ -2,13 +2,15 @@ package net.joseph.ccvault.attributes;
 
 import java.util.HashMap;
 
+import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
+
 public class ValueAttribute<T> extends CCVaultGearAttribute {
     protected T value;
     public T getValue() {
         return value;
     }
-    public ValueAttribute(String name, T value) {
-        super(name);
+    public ValueAttribute(String name, T value, AffixCategorySet categories) {
+        super(name, categories);
         this.value = value;
     }
     @Override

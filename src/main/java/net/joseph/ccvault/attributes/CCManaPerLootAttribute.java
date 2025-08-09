@@ -2,14 +2,15 @@ package net.joseph.ccvault.attributes;
 
 import java.util.HashMap;
 
+import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
 import iskallia.vault.gear.attribute.custom.loot.ManaPerLootAttribute;
 
 public class CCManaPerLootAttribute extends CCVaultGearAttribute{
     
     ManaPerLootAttribute value;
 
-    public CCManaPerLootAttribute(ManaPerLootAttribute value) {
-        super("Manabloom");
+    public CCManaPerLootAttribute(ManaPerLootAttribute value, AffixCategorySet categories) {
+        super("Manabloom", categories);
         this.value = value;
     }
 

@@ -2,6 +2,7 @@ package net.joseph.ccvault.attributes;
 
 import java.util.HashMap;
 
+import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
 import iskallia.vault.gear.attribute.custom.loot.ManaPerLootAttribute;
 
 public class RangedManaPerLootAttribute extends CCManaPerLootAttribute{
@@ -10,8 +11,8 @@ public class RangedManaPerLootAttribute extends CCManaPerLootAttribute{
     ManaPerLootAttribute max;
 
 
-    protected RangedManaPerLootAttribute(int tier, ManaPerLootAttribute value, ManaPerLootAttribute min, ManaPerLootAttribute max) {
-        super(value);
+    protected RangedManaPerLootAttribute(int tier, ManaPerLootAttribute value, ManaPerLootAttribute min, ManaPerLootAttribute max, AffixCategorySet categories) {
+        super(value,categories);
         this.tier = tier;
         this.min = min;
         this.max = max;

@@ -10,9 +10,9 @@ import iskallia.vault.config.gear.VaultGearTierConfig;
 import iskallia.vault.config.gear.VaultGearTierConfig.ModifierConfigRange;
 import iskallia.vault.gear.attribute.VaultGearAttributeInstance;
 import iskallia.vault.gear.attribute.VaultGearModifier;
+import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
 import iskallia.vault.gear.attribute.ability.AbilityLevelAttribute;
 import iskallia.vault.gear.attribute.config.ConfigurableAttributeGenerator;
-import iskallia.vault.gear.attribute.config.DoubleAttributeGenerator;
 import iskallia.vault.gear.attribute.config.IntegerAttributeGenerator;
 import iskallia.vault.gear.attribute.custom.effect.EffectAvoidanceGearAttribute;
 import iskallia.vault.gear.attribute.custom.effect.EffectAvoidanceListGearAttribute;
@@ -47,11 +47,10 @@ public class CCVaultGearAttributeFactory {
         VaultGearTierConfig.ModifierConfigRange modifierConfig = getModifierConfigForLevel(stack, modifier,
                 data.getItemLevel());
         List<Object> allTierConfigs = modifierConfig.allTierConfigs();
-
         if (value instanceof Integer) {
             return new RangedAttribute<Integer>(name, tier, (Integer) value,
                     ((IntegerAttributeGenerator.Range) modifierConfig.minAvailableConfig()).min,
-                    ((IntegerAttributeGenerator.Range) modifierConfig.maxAvailableConfig()).max);
+                    ((IntegerAttributeGenerator.Range) modifierConfig.maxAvailableConfig()).max, modifier.getCategories());
         } else if (value instanceof Float) {
             // List<FloatAttributeGenerator.Range> ranges = castList(allTierConfigs);
             // FloatAttributeGenerator gen = new FloatAttributeGenerator();
@@ -59,7 +58,7 @@ public class CCVaultGearAttributeFactory {
                 Float min = (Float) FieldUtils.readField(modifierConfig.minAvailableConfig(), "min", true);
                 Float max = (Float) FieldUtils.readField(modifierConfig.maxAvailableConfig(), "max", true);
                 return new RangedAttribute<Float>(name, tier, (Float) value, min,
-                        max);
+                        max, modifier.getCategories());
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
@@ -68,13 +67,13 @@ public class CCVaultGearAttributeFactory {
                 Double min = (Double) FieldUtils.readField(modifierConfig.minAvailableConfig(), "min", true);
                 Double max = (Double) FieldUtils.readField(modifierConfig.maxAvailableConfig(), "max", true);
                 return new RangedAttribute<Double>(name, tier, (Double) value, min,
-                        max);
+                        max, modifier.getCategories());
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
 
         } else if (value instanceof Boolean) {
-            return new CCVaultGearAttribute(name);
+            return new CCVaultGearAttribute(name, modifier.getCategories());
         } else if (value instanceof ManaPerLootAttribute) {
 
             if (allTierConfigs != null) {
@@ -82,9 +81,9 @@ public class CCVaultGearAttributeFactory {
                 ManaPerLootAttribute.Generator gen = ManaPerLootAttribute.generator();
                 return new RangedManaPerLootAttribute(tier, (ManaPerLootAttribute) value,
                         gen.getMinimumValue(ranges).get(),
-                        gen.getMaximumValue(ranges).get());
+                        gen.getMaximumValue(ranges).get(), modifier.getCategories());
             }
-            return new CCManaPerLootAttribute((ManaPerLootAttribute) value);
+            return new CCManaPerLootAttribute((ManaPerLootAttribute) value, modifier.getCategories());
         } else if (value instanceof EffectAvoidanceListGearAttribute) {
             EffectAvoidanceListGearAttribute v = (EffectAvoidanceListGearAttribute) value;
             List<EffectAvoidanceListGearAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
@@ -92,7 +91,7 @@ public class CCVaultGearAttributeFactory {
                     .generator();
             return new RangedAttribute<Float>("Effect Avoidance", tier, v.getChance(),
                     gen.getMinimumValue(ranges).get().getChance(),
-                    gen.getMaximumValue(ranges).get().getChance());
+                    gen.getMaximumValue(ranges).get().getChance(),modifier.getCategories());
         } else if (value instanceof EffectAvoidanceGearAttribute) {
             EffectAvoidanceGearAttribute v = (EffectAvoidanceGearAttribute) value;
             List<EffectAvoidanceGearAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
@@ -100,7 +99,7 @@ public class CCVaultGearAttributeFactory {
                     .generator();
             return new RangedAttribute<Float>("Effect Avoidance", tier, v.getChance(),
                     gen.getMinimumValue(ranges).get().getChance(),
-                    gen.getMaximumValue(ranges).get().getChance());
+                    gen.getMaximumValue(ranges).get().getChance(), modifier.getCategories());
         } else if (value instanceof AbilityLevelAttribute) {
             AbilityLevelAttribute v = (AbilityLevelAttribute) value;
             List<AbilityLevelAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
@@ -108,12 +107,12 @@ public class CCVaultGearAttributeFactory {
                     .generator();
             return new CCAbilityLevelAttribute(v.getAbility(), tier, v.getLevelChange(),
                     gen.getMinimumValue(ranges).get().getLevelChange(),
-                    gen.getMaximumValue(ranges).get().getLevelChange());
+                    gen.getMaximumValue(ranges).get().getLevelChange(), modifier.getCategories());
         } else if (value instanceof EffectCloudAttribute) {
             EffectCloudAttribute v = (EffectCloudAttribute) value;
             VaultGearModifierReader<EffectCloudAttribute> reader = EffectCloudAttribute.reader(false);
             return new TieredValueAttribute<String>("Cloud", tier,
-                    reader.getValueDisplay(v).getString());
+                    reader.getValueDisplay(v).getString(),modifier.getCategories());
         }
         HashMap<String, Object> map = new HashMap<>();
         map.put("modifier", modifier.toString());
@@ -141,23 +140,31 @@ public class CCVaultGearAttributeFactory {
             VaultGearData data) {
 
         if (instance.getAttribute().equals(ModGearAttributes.CRAFTING_POTENTIAL)) {
-            return new ValueAttribute<Integer>("Crafting Potential", (Integer) instance.getValue());
+            return new ValueAttribute<Integer>("Crafting Potential", (Integer) instance.getValue(), new AffixCategorySet());
         } else if (instance.getAttribute().equals(ModGearAttributes.MAX_CRAFTING_POTENTIAL)) {
-            return new ValueAttribute<Integer>("Max Crafting Potential", (Integer) instance.getValue());
+            return new ValueAttribute<Integer>("Max Crafting Potential", (Integer) instance.getValue(),  new AffixCategorySet());
         } else if (instance.getAttribute().equals(ModGearAttributes.GEAR_MODEL)) {
             ResourceLocation loc = (ResourceLocation) instance.getValue();
             var model = ModDynamicModels.REGISTRIES.getModelByResourceLocation(loc);
             if (model.isPresent()) {
-                return new ValueAttribute<String>("Model", model.get().getDisplayName());
+                return new ValueAttribute<String>("Model", model.get().getDisplayName(), new AffixCategorySet());
             }
-            return new ValueAttribute<String>("Model", null);
+            return new ValueAttribute<String>("Model", null, new AffixCategorySet());
         } else if (instance.getAttribute().equals(ModGearAttributes.PREFIXES)) {
-            return new ValueAttribute<Integer>("Prefixes", (Integer) instance.getValue());
+            return new ValueAttribute<Integer>("Prefixes", (Integer) instance.getValue(), new AffixCategorySet());
         } else if (instance.getAttribute().equals(ModGearAttributes.SUFFIXES)) {
-            return new ValueAttribute<Integer>("Suffixes", (Integer) instance.getValue());
+            return new ValueAttribute<Integer>("Suffixes", (Integer) instance.getValue(), new AffixCategorySet());
         }
-        // yes this is a stupid unsafe down cast, but it just works so no touching
-        return parse(stack, (VaultGearModifier<?>) instance);
+        else if (instance.getAttribute().equals(ModGearAttributes.IS_LEGENDARY)){
+            return new CCVaultGearAttribute("Legendary", new AffixCategorySet());
+        }
+        try {
+            // We just try and cast it to see if this instance was cast down from a modifier
+            return parse(stack, (VaultGearModifier<?>) instance);
+            
+        } catch (ClassCastException e) {
+            return new DebugAttribute(instance.toString());
+        }
     }
 
     private static CCVaultGearAttribute parseDeterministicModifier(VaultGearModifier<?> modifier) {
@@ -166,14 +173,14 @@ public class CCVaultGearAttributeFactory {
         // Manabloom
         if (value instanceof ManaPerLootAttribute) {
             // Because this has 2 values
-            return new CCManaPerLootAttribute((ManaPerLootAttribute) value);
+            return new CCManaPerLootAttribute((ManaPerLootAttribute) value, modifier.getCategories());
         } else if (value instanceof Boolean) {
             // Having a value for boolean modifiers makes no sense, they are either True, or
             // arent there for us to read ever
             // So to avoid obviously duplicated data we just return the fact they exist
-            return new CCVaultGearAttribute(modifier.getAttribute().getReader().getModifierName());
+            return new CCVaultGearAttribute(modifier.getAttribute().getReader().getModifierName(), modifier.getCategories());
         }
         // Other types we put them in a generic value attribute
-        return new ValueAttribute(modifier.getAttribute().getReader().getModifierName(), value);
+        return new ValueAttribute(modifier.getAttribute().getReader().getModifierName(), value , new AffixCategorySet());
     }
 }
