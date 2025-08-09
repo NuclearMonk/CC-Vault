@@ -1,48 +1,27 @@
 package net.joseph.ccvault.attributes;
 
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-import iskallia.vault.config.entry.IntRangeEntry;
-import iskallia.vault.config.entry.MultipleGearAttributeRollOutputEntry;
+import org.apache.commons.lang3.reflect.FieldUtils;
+
 import iskallia.vault.config.gear.VaultGearTierConfig;
-import iskallia.vault.config.gear.VaultGearTierConfig.ModifierAffixTagGroup;
 import iskallia.vault.config.gear.VaultGearTierConfig.ModifierConfigRange;
-import iskallia.vault.config.gear.VaultGearTierConfig.ModifierOutcome;
-import iskallia.vault.config.gear.VaultGearTierConfig.ModifierTier;
-import iskallia.vault.effect.PoisonOverrideEffect;
-import iskallia.vault.gear.GearRollHelper;
-import iskallia.vault.gear.attribute.VaultGearAttribute;
 import iskallia.vault.gear.attribute.VaultGearAttributeInstance;
 import iskallia.vault.gear.attribute.VaultGearModifier;
-import iskallia.vault.gear.attribute.VaultGearModifier.AffixType;
 import iskallia.vault.gear.attribute.ability.AbilityLevelAttribute;
 import iskallia.vault.gear.attribute.config.ConfigurableAttributeGenerator;
 import iskallia.vault.gear.attribute.config.DoubleAttributeGenerator;
-import iskallia.vault.gear.attribute.config.FloatAttributeGenerator;
 import iskallia.vault.gear.attribute.config.IntegerAttributeGenerator;
-import iskallia.vault.gear.attribute.config.IntegerAttributeGenerator.Range;
 import iskallia.vault.gear.attribute.custom.effect.EffectAvoidanceGearAttribute;
 import iskallia.vault.gear.attribute.custom.effect.EffectAvoidanceListGearAttribute;
 import iskallia.vault.gear.attribute.custom.effect.EffectCloudAttribute;
-import iskallia.vault.gear.attribute.custom.effect.EffectAvoidanceListGearAttribute.Config;
-import iskallia.vault.gear.attribute.custom.effect.EffectCloudAttribute.EffectCloud;
 import iskallia.vault.gear.attribute.custom.loot.ManaPerLootAttribute;
 import iskallia.vault.gear.data.VaultGearData;
-import iskallia.vault.gear.item.VaultGearItem;
-import iskallia.vault.gear.reader.IntegerModifierReader;
 import iskallia.vault.gear.reader.VaultGearModifierReader;
-import iskallia.vault.gear.tooltip.VaultGearTooltipItem;
-import iskallia.vault.init.ModConfigs;
 import iskallia.vault.init.ModDynamicModels;
 import iskallia.vault.init.ModGearAttributes;
-import iskallia.vault.init.ModGearModifications;
-import net.joseph.ccvault.interfaces.ILuaTable;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
@@ -52,68 +31,47 @@ public class CCVaultGearAttributeFactory {
         String name = modifier.getAttribute().getReader().getModifierName();
         Object value = modifier.getValue();
 
-        // This is ugly, but Jewel size is coded differently from other Modifiers
-        // Attempting to get the config the normal way to get the range causes a
-        // NoSuchElementException
-        // So just hard coding the logic found in JewelItem#onIdentify and adapting it
-        // feels correct
-        // However if ignoreJewelSize is set we can follow the normal rout for integer
-        // modifires
-        // ( ͡° ͜ʖ ͡°)
-        // if (name.equals("Size")) {
-        //     CompoundTag tag = stack.getOrCreateTag();
-        //     if (!tag.contains("ignoreJewelSize") || !tag.getBoolean("ignoreJewelSize")) {
-        //         Optional<IntRangeEntry> range = ModConfigs.JEWEL_SIZE.getSize(data.getRarity());
-        //         if (range.isPresent()) {
-        //             return new RangedAttribute<Integer>(name, 1, (Integer) value, range.get().getMin(),
-        //                     range.get().getMax());
-        //         }
-        //         ;
-        //     }
-
-        // }
-
+        // Tier -1 is used to define things that dont roll a tier, like tools, gem
+        // sizes, etc
+        // why of all places getRolledTier doesnt return a nullable value instead, is
+        // out of my non giga brain developer brain
+        if (modifier.getRolledTier() == -1) {
+            return parseDeterministicModifier(modifier);
+        }
         // while we are at it we can also get the tier, since tiers are 0 indexed in
         // code but 1 indexed in the client,
         // we just correct for that so it matches what players can read with their
         // eyeballs
-
         int tier = modifier.getRolledTier() + 1;
-        VaultGearTierConfig.ModifierConfigRange modifierConfig = null;
-        List<Object> allTierConfigs = null;
-        if (tier != 0){
-            modifierConfig = getModifierConfigForLevel(stack, modifier,
-            data.getItemLevel());
-            allTierConfigs= modifierConfig.allTierConfigs();
-        }
 
+        VaultGearTierConfig.ModifierConfigRange modifierConfig = getModifierConfigForLevel(stack, modifier,
+                data.getItemLevel());
+        List<Object> allTierConfigs = modifierConfig.allTierConfigs();
 
         if (value instanceof Integer) {
-            if (tier != 0){
-                List<IntegerAttributeGenerator.Range> ranges = castList(modifierConfig.allTierConfigs());
-                IntegerAttributeGenerator gen = new IntegerAttributeGenerator();
-                // Then we use the generator funtions to get minimum and the highest value in
-                // the roll
-                return new RangedAttribute<Integer>(name, tier, (Integer) value, gen.getMinimumValue(ranges).get(),
-                        gen.getMaximumValue(ranges).get());
-            }
-            return new ValueAttribute<Integer>(name, (Integer) value);
-
-
+            return new RangedAttribute<Integer>(name, tier, (Integer) value,
+                    ((IntegerAttributeGenerator.Range) modifierConfig.minAvailableConfig()).min,
+                    ((IntegerAttributeGenerator.Range) modifierConfig.maxAvailableConfig()).max);
         } else if (value instanceof Float) {
-            if (allTierConfigs != null) {
-                List<FloatAttributeGenerator.Range> ranges = castList(allTierConfigs);
-                FloatAttributeGenerator gen = new FloatAttributeGenerator();
-                return new RangedAttribute<Float>(name, tier, (Float) value, gen.getMinimumValue(ranges).get(),
-                        gen.getMaximumValue(ranges).get());
+            // List<FloatAttributeGenerator.Range> ranges = castList(allTierConfigs);
+            // FloatAttributeGenerator gen = new FloatAttributeGenerator();
+            try {
+                Float min = (Float) FieldUtils.readField(modifierConfig.minAvailableConfig(), "min", true);
+                Float max = (Float) FieldUtils.readField(modifierConfig.maxAvailableConfig(), "max", true);
+                return new RangedAttribute<Float>(name, tier, (Float) value, min,
+                        max);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
             }
-            return new ValueAttribute<Float>(name, (Float) value);
         } else if (value instanceof Double) {
-            List<DoubleAttributeGenerator.Range> ranges = castList(modifierConfig.allTierConfigs());
-            DoubleAttributeGenerator gen = new DoubleAttributeGenerator();
-            Double min = gen.getMinimumValue(ranges).get();
-            Double max = gen.getMaximumValue(ranges).get();
-            return new RangedAttribute<Double>(name, tier, (Double) value, min, max);
+            try {
+                Double min = (Double) FieldUtils.readField(modifierConfig.minAvailableConfig(), "min", true);
+                Double max = (Double) FieldUtils.readField(modifierConfig.maxAvailableConfig(), "max", true);
+                return new RangedAttribute<Double>(name, tier, (Double) value, min,
+                        max);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
 
         } else if (value instanceof Boolean) {
             return new CCVaultGearAttribute(name);
@@ -126,7 +84,7 @@ public class CCVaultGearAttributeFactory {
                         gen.getMinimumValue(ranges).get(),
                         gen.getMaximumValue(ranges).get());
             }
-            return new CCManaPerLootAttribute((ManaPerLootAttribute)value);
+            return new CCManaPerLootAttribute((ManaPerLootAttribute) value);
         } else if (value instanceof EffectAvoidanceListGearAttribute) {
             EffectAvoidanceListGearAttribute v = (EffectAvoidanceListGearAttribute) value;
             List<EffectAvoidanceListGearAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
@@ -156,13 +114,13 @@ public class CCVaultGearAttributeFactory {
             VaultGearModifierReader<EffectCloudAttribute> reader = EffectCloudAttribute.reader(false);
             return new TieredValueAttribute<String>("Cloud", tier,
                     reader.getValueDisplay(v).getString());
-        } else {
-            HashMap<String, Object> map = new HashMap<>();
-            map.put("modifier", modifier.toString());
-            map.put("value", value.toString());
-            map.put("configRange", modifierConfig.toString());
-            return new DebugAttribute(map);
         }
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("modifier", modifier.toString());
+        map.put("value", value.toString());
+        map.put("configRange", modifierConfig.toString());
+        return new DebugAttribute(map);
+
     }
 
     private static <T> List<T> castList(List<Object> list) {
@@ -200,5 +158,22 @@ public class CCVaultGearAttributeFactory {
         }
         // yes this is a stupid unsafe down cast, but it just works so no touching
         return parse(stack, (VaultGearModifier<?>) instance);
+    }
+
+    private static CCVaultGearAttribute parseDeterministicModifier(VaultGearModifier<?> modifier) {
+        var value = modifier.getValue();
+        // There are a few modifiers we handle differently, mostly the weird ones like
+        // Manabloom
+        if (value instanceof ManaPerLootAttribute) {
+            // Because this has 2 values
+            return new CCManaPerLootAttribute((ManaPerLootAttribute) value);
+        } else if (value instanceof Boolean) {
+            // Having a value for boolean modifiers makes no sense, they are either True, or
+            // arent there for us to read ever
+            // So to avoid obviously duplicated data we just return the fact they exist
+            return new CCVaultGearAttribute(modifier.getAttribute().getReader().getModifierName());
+        }
+        // Other types we put them in a generic value attribute
+        return new ValueAttribute(modifier.getAttribute().getReader().getModifierName(), value);
     }
 }

@@ -8,7 +8,7 @@ public class CCManaPerLootAttribute extends CCVaultGearAttribute{
     
     ManaPerLootAttribute value;
 
-    protected CCManaPerLootAttribute(ManaPerLootAttribute value) {
+    public CCManaPerLootAttribute(ManaPerLootAttribute value) {
         super("Manabloom");
         this.value = value;
     }
