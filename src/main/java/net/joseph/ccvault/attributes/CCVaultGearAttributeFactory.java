@@ -12,6 +12,10 @@ import iskallia.vault.gear.attribute.VaultGearAttributeInstance;
 import iskallia.vault.gear.attribute.VaultGearModifier;
 import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
 import iskallia.vault.gear.attribute.ability.AbilityLevelAttribute;
+import iskallia.vault.gear.attribute.ability.special.base.SpecialAbilityGearAttribute;
+import iskallia.vault.gear.attribute.ability.special.base.SpecialAbilityGearAttribute.SpecialAbilityTierConfig;
+import iskallia.vault.gear.attribute.ability.special.base.template.value.FloatValue;
+import iskallia.vault.gear.attribute.ability.special.base.template.value.IntValue;
 import iskallia.vault.gear.attribute.config.ConfigurableAttributeGenerator;
 import iskallia.vault.gear.attribute.config.IntegerAttributeGenerator;
 import iskallia.vault.gear.attribute.custom.effect.EffectAvoidanceGearAttribute;
@@ -52,8 +56,6 @@ public class CCVaultGearAttributeFactory {
                     ((IntegerAttributeGenerator.Range) modifierConfig.minAvailableConfig()).min,
                     ((IntegerAttributeGenerator.Range) modifierConfig.maxAvailableConfig()).max, modifier.getCategories());
         } else if (value instanceof Float) {
-            // List<FloatAttributeGenerator.Range> ranges = castList(allTierConfigs);
-            // FloatAttributeGenerator gen = new FloatAttributeGenerator();
             try {
                 Float min = (Float) FieldUtils.readField(modifierConfig.minAvailableConfig(), "min", true);
                 Float max = (Float) FieldUtils.readField(modifierConfig.maxAvailableConfig(), "max", true);
@@ -113,6 +115,32 @@ public class CCVaultGearAttributeFactory {
             VaultGearModifierReader<EffectCloudAttribute> reader = EffectCloudAttribute.reader(false);
             return new TieredValueAttribute<String>("Cloud", tier,
                     reader.getValueDisplay(v).getString(),modifier.getCategories());
+        }
+        else if(value instanceof SpecialAbilityGearAttribute){
+            String ability = ((SpecialAbilityGearAttribute)value).getAbilityKey();
+            String modification = ((SpecialAbilityGearAttribute)value).getModification().getKey().toString();
+            var v = ((SpecialAbilityGearAttribute)value).getValue();
+            
+            if (v instanceof IntValue){
+                try {
+                    
+                    Integer min = (Integer) FieldUtils.readField(((SpecialAbilityTierConfig)modifierConfig.minAvailableConfig()).getConfig(), "min", true);
+                    Integer max = (Integer) FieldUtils.readField(((SpecialAbilityTierConfig)modifierConfig.minAvailableConfig()).getConfig(), "max", true);
+                    return new SpecialAbilityAttribute<Integer>(ability,modification,tier, ((IntValue)v).getValue(), min, max, modifier.getCategories());
+                } catch (IllegalAccessException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }else if(v instanceof FloatValue){
+                try {
+                    Float min = (Float) FieldUtils.readField(((SpecialAbilityTierConfig)modifierConfig.minAvailableConfig()).getConfig(), "min", true);
+                    Float max = (Float) FieldUtils.readField(((SpecialAbilityTierConfig)modifierConfig.minAvailableConfig()).getConfig(), "max", true);
+                    return new SpecialAbilityAttribute<Float>(ability,modification,tier, ((FloatValue)v).getValue(), min, max, modifier.getCategories());
+                } catch (IllegalAccessException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
         }
         HashMap<String, Object> map = new HashMap<>();
         map.put("modifier", modifier.toString());

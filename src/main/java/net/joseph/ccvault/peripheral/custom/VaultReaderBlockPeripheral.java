@@ -18,6 +18,7 @@ import dan200.computercraft.api.lua.LuaFunction;
 import dan200.computercraft.api.peripheral.IComputerAccess;
 import dan200.computercraft.api.peripheral.IPeripheral;
 import iskallia.vault.config.gear.VaultGearTierConfig;
+import iskallia.vault.gear.VaultGearRarity;
 import iskallia.vault.gear.VaultGearState;
 import iskallia.vault.gear.attribute.VaultGearModifier;
 import iskallia.vault.gear.attribute.VaultGearModifier.AffixType;
@@ -562,9 +563,11 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
     private HashMap<String, Object> getGearDetails(ItemStack stack) {
         VaultGearData data = VaultGearData.read(stack);
         HashMap<String, Object> gear = new HashMap<>();
+
         gear.put("Level", data.getItemLevel());
         gear.put("Rarity", data.getRarity().getDisplayName().getString());
         
+
         // Return early in case the gear isn't identified as there is no more data to be read
         switch (data.getState()) {
             case UNIDENTIFIED:
@@ -576,26 +579,27 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
 
                 break;
         }
-
         gear.put("Identified", true);
-        gear.put("RepairSlots", getRepair_slots(data));
-        gear.put("Durability", getDurability(stack));
         switch (VaultGearItem.of(stack).getGearType(stack)) {
             case HELMET:
             case CHESTPLATE:
             case LEGGINGS:
             case BOOTS:
-            case WAND:
-            case FOCUS:
                 gear.put("Slot", VaultGearItem.of(stack).getEquipmentSlot(stack).toString());
                 break;
 
             default:
                 break;
         }
-        gear.put("PrefixSlots", data.getFirstValue(ModGearAttributes.PREFIXES).get());
-        gear.put("SuffixSlots", data.getFirstValue(ModGearAttributes.SUFFIXES).get());
-        gear.put("CraftingPotential", getCraftingPotential(data));
+        if (data.getRarity() != VaultGearRarity.UNIQUE){
+            gear.put("PrefixSlots", data.getFirstValue(ModGearAttributes.PREFIXES).get());
+            gear.put("SuffixSlots", data.getFirstValue(ModGearAttributes.SUFFIXES).get());
+            gear.put("CraftingPotential", getCraftingPotential(data));   
+        }
+        gear.put("RepairSlots", getRepair_slots(data));
+        gear.put("Durability", getDurability(stack));
+
+
         List<HashMap<String, Object>> attributes = new ArrayList<HashMap<String, Object>>();
         data.getAttributes().forEach(instance -> {
             if (instance.getAttribute().equals(ModGearAttributes.CRAFTING_POTENTIAL)) {
@@ -631,6 +635,7 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         return gear;
 
     }
+
 
     private HashMap<String, Object> getToolDetails(ItemStack stack) {
         VaultGearData data = VaultGearData.read(stack);
