@@ -1,8 +1,6 @@
 package net.joseph.ccvault.attributes;
 
 import java.util.HashMap;
-import java.util.stream.Collectors;
-
 import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
 import net.joseph.ccvault.interfaces.ILuaTable;
 

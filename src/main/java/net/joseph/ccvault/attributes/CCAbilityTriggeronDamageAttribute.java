@@ -1,17 +1,23 @@
 package net.joseph.ccvault.attributes;
 
-import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
-import iskallia.vault.gear.attribute.custom.ability.AbilityTriggerOnDamageAttribute;
+import java.util.HashMap;
 
-public class CCAbilityTriggeronDamageAttribute extends ValueAttribute<Integer> {
+import com.mojang.datafixers.util.Pair;
+
+import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
+
+public class CCAbilityTriggeronDamageAttribute extends RangedValueAttribute<Pair<Integer, Float>> {
     private String ability;
-    private Integer minLevel;
-    private Integer maxLevel;
-    private Integer minChance;
-    private Integer maxChance;
     
-    public CCAbilityTriggeronDamageAttribute(String name, Integer value, AffixCategorySet categories) {
-        super("On Hit Ability Cast", value, categories);
-        //TODO Auto-generated constructor stub
+    public CCAbilityTriggeronDamageAttribute(AffixCategorySet categories,String ability, Pair<Integer,Float> value, int tier,Pair<Integer,Float> min, Pair<Integer,Float> max ) {
+        super("On Hit Ability Cast", categories, value, tier, min, max);
+        this.ability = ability;
+    }
+
+    @Override
+    public HashMap<String, Object> toLuaTable() {
+        HashMap<String, Object> map = super.toLuaTable();
+        map.put("ability", ability);
+        return map;
     }
 }

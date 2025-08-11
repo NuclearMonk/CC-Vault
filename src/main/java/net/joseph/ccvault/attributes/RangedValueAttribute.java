@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
 
-public class RangedAttribute<T> extends TieredValueAttribute<T> {
+public class RangedValueAttribute<T> extends TieredValueAttribute<T> {
     T min;
     T max;
 
@@ -16,8 +16,8 @@ public class RangedAttribute<T> extends TieredValueAttribute<T> {
         return max;
     }
 
-    public RangedAttribute(String name,int tier, T value, T min, T max, AffixCategorySet categories) {
-        super(name,tier, value, categories);
+    public RangedValueAttribute(String name, AffixCategorySet categories, T value,int tier, T min, T max) {
+        super(name, categories, value,tier);
         this.min = min;
         this.max = max;
     }
