@@ -18,6 +18,8 @@ import iskallia.vault.gear.attribute.ability.special.base.template.value.FloatVa
 import iskallia.vault.gear.attribute.ability.special.base.template.value.IntValue;
 import iskallia.vault.gear.attribute.config.ConfigurableAttributeGenerator;
 import iskallia.vault.gear.attribute.config.IntegerAttributeGenerator;
+import iskallia.vault.gear.attribute.custom.ability.AbilityTriggerOnDamageAttribute;
+import iskallia.vault.gear.attribute.custom.ability.AbilityTriggerOnDamageAttribute.Config;
 import iskallia.vault.gear.attribute.custom.effect.EffectAvoidanceGearAttribute;
 import iskallia.vault.gear.attribute.custom.effect.EffectAvoidanceListGearAttribute;
 import iskallia.vault.gear.attribute.custom.effect.EffectCloudAttribute;
@@ -120,7 +122,6 @@ public class CCVaultGearAttributeFactory {
             String ability = ((SpecialAbilityGearAttribute)value).getAbilityKey();
             String modification = ((SpecialAbilityGearAttribute)value).getModification().getKey().toString();
             var v = ((SpecialAbilityGearAttribute)value).getValue();
-            
             if (v instanceof IntValue){
                 try {
                     
@@ -141,6 +142,15 @@ public class CCVaultGearAttributeFactory {
                     e.printStackTrace();
                 }
             }
+            
+        }else if(value instanceof AbilityTriggerOnDamageAttribute) {
+            AbilityTriggerOnDamageAttribute v = (AbilityTriggerOnDamageAttribute)value;
+            v.getAbilityId();
+            v.getChance();
+            v.getLevel();
+            AbilityTriggerOnDamageAttribute.Config min = (AbilityTriggerOnDamageAttribute.Config) modifierConfig.minAvailableConfig();
+            AbilityTriggerOnDamageAttribute.Config max = (AbilityTriggerOnDamageAttribute.Config) modifierConfig.maxAvailableConfig();
+
         }
         HashMap<String, Object> map = new HashMap<>();
         map.put("modifier", modifier.toString());

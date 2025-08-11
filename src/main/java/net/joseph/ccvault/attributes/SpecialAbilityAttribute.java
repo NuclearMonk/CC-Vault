@@ -7,11 +7,12 @@ import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
 public class SpecialAbilityAttribute<T> extends RangedAttribute<T>{
     private String abilityKey;
     private String modificationType;
-    public SpecialAbilityAttribute(String abilityKey,String modificationType, int tier, T value, T min, T max,
+
+    public SpecialAbilityAttribute(String abilityKey,String modificationKey, int tier, T value, T min, T max,
             AffixCategorySet categories) {
-        super("Special Ability", tier, value, min, max, categories);
+        super("Ability Modification", tier, value, min, max, categories);
         this.abilityKey = abilityKey;
-        this.modificationType = modificationType;
+        this.modificationType = modificationKey;
     }
     @Override
     public HashMap<String, Object> toLuaTable() {
