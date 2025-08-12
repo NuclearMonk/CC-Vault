@@ -5,11 +5,9 @@ import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
 import net.joseph.ccvault.interfaces.ILuaTable;
 
 public class CCVaultGearAttribute implements ILuaTable{
-    private String name;
-    private AffixCategorySet categories = new AffixCategorySet();
-    public String getName() {
-        return name;
-    }
+    protected String name;
+    protected AffixCategorySet categories = new AffixCategorySet();
+
 
     public CCVaultGearAttribute(String name, AffixCategorySet categories ){
         this.name = name;

@@ -6,11 +6,15 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 
+import com.mojang.datafixers.util.Pair;
+
 import iskallia.vault.config.gear.VaultGearTierConfig;
 import iskallia.vault.config.gear.VaultGearTierConfig.ModifierConfigRange;
 import iskallia.vault.gear.attribute.VaultGearAttributeInstance;
 import iskallia.vault.gear.attribute.VaultGearModifier;
 import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
+import iskallia.vault.gear.attribute.ability.AbilityAreaOfEffectPercentAttribute;
+import iskallia.vault.gear.attribute.ability.AbilityCooldownPercentAttribute;
 import iskallia.vault.gear.attribute.ability.AbilityLevelAttribute;
 import iskallia.vault.gear.attribute.ability.special.base.SpecialAbilityGearAttribute;
 import iskallia.vault.gear.attribute.ability.special.base.SpecialAbilityGearAttribute.SpecialAbilityTierConfig;
@@ -22,6 +26,8 @@ import iskallia.vault.gear.attribute.custom.ability.AbilityTriggerOnDamageAttrib
 import iskallia.vault.gear.attribute.custom.effect.EffectAvoidanceGearAttribute;
 import iskallia.vault.gear.attribute.custom.effect.EffectAvoidanceListGearAttribute;
 import iskallia.vault.gear.attribute.custom.effect.EffectCloudAttribute;
+import iskallia.vault.gear.attribute.custom.effect.EffectGearAttribute;
+import iskallia.vault.gear.attribute.custom.effect.EffectTrialAttribute;
 import iskallia.vault.gear.attribute.custom.loot.ManaPerLootAttribute;
 import iskallia.vault.gear.data.VaultGearData;
 import iskallia.vault.gear.reader.VaultGearModifierReader;
@@ -52,15 +58,15 @@ public class CCVaultGearAttributeFactory {
         VaultGearTierConfig.ModifierConfigRange modifierConfig = getModifierConfigForLevel(stack, modifier,
                 data.getItemLevel());
         List<Object> allTierConfigs = modifierConfig.allTierConfigs();
-        if (value instanceof Integer) {
-            return new RangedValueAttribute<Integer>(name,
-                    modifier.getCategories(),
-                    (Integer) value,
-                    tier,
-                    ((IntegerAttributeGenerator.Range) modifierConfig.minAvailableConfig()).min,
-                    ((IntegerAttributeGenerator.Range) modifierConfig.maxAvailableConfig()).max);
-        } else if (value instanceof Float) {
-            try {
+        try {
+            if (value instanceof Integer) {
+                return new RangedValueAttribute<Integer>(name,
+                        modifier.getCategories(),
+                        (Integer) value,
+                        tier,
+                        ((IntegerAttributeGenerator.Range) modifierConfig.minAvailableConfig()).min,
+                        ((IntegerAttributeGenerator.Range) modifierConfig.maxAvailableConfig()).max);
+            } else if (value instanceof Float) {
                 Float min = (Float) FieldUtils.readField(modifierConfig.minAvailableConfig(), "min", true);
                 Float max = (Float) FieldUtils.readField(modifierConfig.maxAvailableConfig(), "max", true);
                 return new RangedValueAttribute<Float>(name,
@@ -69,11 +75,8 @@ public class CCVaultGearAttributeFactory {
                         tier,
                         min,
                         max);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        } else if (value instanceof Double) {
-            try {
+            } else if (value instanceof Double) {
+
                 Double min = (Double) FieldUtils.readField(modifierConfig.minAvailableConfig(), "min", true);
                 Double max = (Double) FieldUtils.readField(modifierConfig.maxAvailableConfig(), "max", true);
                 return new RangedValueAttribute<Double>(name,
@@ -82,100 +85,162 @@ public class CCVaultGearAttributeFactory {
                         tier,
                         min,
                         max);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
 
-        } else if (value instanceof Boolean) {
-            return new CCVaultGearAttribute(name, modifier.getCategories());
-        } else if (value instanceof ManaPerLootAttribute) {
+            } else if (value instanceof Boolean) {
+                return new CCVaultGearAttribute(name, modifier.getCategories());
+            } else if (value instanceof ManaPerLootAttribute) {
+                Pair<Integer, Float> v = new Pair<>(((ManaPerLootAttribute) value).getManaGenerated(),
+                        ((ManaPerLootAttribute) value).getManaGenerationChance());
+                if (allTierConfigs != null) {
+                    ManaPerLootAttribute.Config min_cfg = ((ManaPerLootAttribute.Config) modifierConfig
+                            .minAvailableConfig());
+                    ManaPerLootAttribute.Config max_cfg = ((ManaPerLootAttribute.Config) modifierConfig
+                            .maxAvailableConfig());
 
-            if (allTierConfigs != null) {
-                List<ManaPerLootAttribute.Config> ranges = castList(allTierConfigs);
-                ManaPerLootAttribute.Generator gen = ManaPerLootAttribute.generator();
-                return new RangedManaPerLootAttribute(tier, (ManaPerLootAttribute) value,
-                        gen.getMinimumValue(ranges).get(),
-                        gen.getMaximumValue(ranges).get(), modifier.getCategories());
-            }
-            return new CCManaPerLootAttribute((ManaPerLootAttribute) value, modifier.getCategories());
-        } else if (value instanceof EffectAvoidanceListGearAttribute) {
-            EffectAvoidanceListGearAttribute v = (EffectAvoidanceListGearAttribute) value;
-            List<EffectAvoidanceListGearAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
-            ConfigurableAttributeGenerator<EffectAvoidanceListGearAttribute, EffectAvoidanceListGearAttribute.Config> gen = EffectAvoidanceListGearAttribute
-                    .generator();
-            return new RangedValueAttribute<Float>("Effect Avoidance",
-                    modifier.getCategories(),
-                    v.getChance(),
-                    tier,
-                    gen.getMinimumValue(ranges).get().getChance(),
-                    gen.getMaximumValue(ranges).get().getChance());
-        } else if (value instanceof EffectAvoidanceGearAttribute) {
-            EffectAvoidanceGearAttribute v = (EffectAvoidanceGearAttribute) value;
-            List<EffectAvoidanceGearAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
-            ConfigurableAttributeGenerator<EffectAvoidanceGearAttribute, EffectAvoidanceGearAttribute.Config> gen = EffectAvoidanceGearAttribute
-                    .generator();
-            return new RangedValueAttribute<Float>("Effect Avoidance",
-                    modifier.getCategories(),
-                    v.getChance(),
-                    tier,
-                    gen.getMinimumValue(ranges).get().getChance(),
-                    gen.getMaximumValue(ranges).get().getChance());
-        } else if (value instanceof AbilityLevelAttribute) {
-            AbilityLevelAttribute v = (AbilityLevelAttribute) value;
-            List<AbilityLevelAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
-            ConfigurableAttributeGenerator<AbilityLevelAttribute, AbilityLevelAttribute.Config> gen = AbilityLevelAttribute
-                    .generator();
-            return new CCAbilityLevelAttribute(v.getAbility(), tier, v.getLevelChange(),
-                    gen.getMinimumValue(ranges).get().getLevelChange(),
-                    gen.getMaximumValue(ranges).get().getLevelChange(), modifier.getCategories());
-        } else if (value instanceof EffectCloudAttribute) {
-            EffectCloudAttribute v = (EffectCloudAttribute) value;
-            VaultGearModifierReader<EffectCloudAttribute> reader = EffectCloudAttribute.reader(false);
-            return new TieredValueAttribute<String>("Cloud",
-                    modifier.getCategories(),
-                    reader.getValueDisplay(v).getString(),
-                    tier);
-        } else if (value instanceof SpecialAbilityGearAttribute) {
-            String ability = ((SpecialAbilityGearAttribute) value).getAbilityKey();
-            String modification = ((SpecialAbilityGearAttribute) value).getModification().getKey().toString();
-            var v = ((SpecialAbilityGearAttribute) value).getValue();
-            if (v instanceof IntValue) {
-                try {
-
-                    Integer min = (Integer) FieldUtils.readField(
-                            ((SpecialAbilityTierConfig) modifierConfig.minAvailableConfig()).getConfig(), "min", true);
-                    Integer max = (Integer) FieldUtils.readField(
-                            ((SpecialAbilityTierConfig) modifierConfig.minAvailableConfig()).getConfig(), "max", true);
-                    return new SpecialAbilityAttribute<Integer>(ability, modification, tier, ((IntValue) v).getValue(),
-                            min, max, modifier.getCategories());
-                } catch (IllegalAccessException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    Pair<Integer, Float> min = new Pair<>(min_cfg.getManaGenerated().getMin(),
+                            min_cfg.getManaGenerationChance().getMin());
+                    Pair<Integer, Float> max = new Pair<>(max_cfg.getManaGenerated().getMax(),
+                            min_cfg.getManaGenerationChance().getMax());
+                    return new RangedManaPerLootAttribute(modifier.getCategories(),
+                            v,
+                            tier,
+                            min,
+                            max);
                 }
-            } else if (v instanceof FloatValue) {
-                try {
-                    Float min = (Float) FieldUtils.readField(
-                            ((SpecialAbilityTierConfig) modifierConfig.minAvailableConfig()).getConfig(), "min", true);
-                    Float max = (Float) FieldUtils.readField(
-                            ((SpecialAbilityTierConfig) modifierConfig.minAvailableConfig()).getConfig(), "max", true);
-                    return new SpecialAbilityAttribute<Float>(ability, modification, tier, ((FloatValue) v).getValue(),
-                            min, max, modifier.getCategories());
-                } catch (IllegalAccessException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                return new CCManaPerLootAttribute(modifier.getCategories(), v, tier);
+            } else if (value instanceof EffectAvoidanceListGearAttribute) {
+                EffectAvoidanceListGearAttribute v = (EffectAvoidanceListGearAttribute) value;
+                List<EffectAvoidanceListGearAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
+                ConfigurableAttributeGenerator<EffectAvoidanceListGearAttribute, EffectAvoidanceListGearAttribute.Config> gen = EffectAvoidanceListGearAttribute
+                        .generator();
+                return new RangedValueAttribute<Float>("Effect Avoidance",
+                        modifier.getCategories(),
+                        v.getChance(),
+                        tier,
+                        gen.getMinimumValue(ranges).get().getChance(),
+                        gen.getMaximumValue(ranges).get().getChance());
+            } else if (value instanceof EffectAvoidanceGearAttribute) {
+                EffectAvoidanceGearAttribute v = (EffectAvoidanceGearAttribute) value;
+                List<EffectAvoidanceGearAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
+                ConfigurableAttributeGenerator<EffectAvoidanceGearAttribute, EffectAvoidanceGearAttribute.Config> gen = EffectAvoidanceGearAttribute
+                        .generator();
+                return new RangedValueAttribute<Float>("Effect Avoidance",
+                        modifier.getCategories(),
+                        v.getChance(),
+                        tier,
+                        gen.getMinimumValue(ranges).get().getChance(),
+                        gen.getMaximumValue(ranges).get().getChance());
+            } else if (value instanceof AbilityLevelAttribute) {
+                AbilityLevelAttribute v = (AbilityLevelAttribute) value;
+                List<AbilityLevelAttribute.Config> ranges = castList(modifierConfig.allTierConfigs());
+                ConfigurableAttributeGenerator<AbilityLevelAttribute, AbilityLevelAttribute.Config> gen = AbilityLevelAttribute
+                        .generator();
+                return new CCAbilityLevelAttribute(v.getAbility(), tier, v.getLevelChange(),
+                        gen.getMinimumValue(ranges).get().getLevelChange(),
+                        gen.getMaximumValue(ranges).get().getLevelChange(), modifier.getCategories());
+            } else if (value instanceof EffectCloudAttribute) {
+                EffectCloudAttribute v = (EffectCloudAttribute) value;
+                VaultGearModifierReader<EffectCloudAttribute> reader = EffectCloudAttribute.reader(false);
+                return new TieredValueAttribute<String>("Cloud",
+                        modifier.getCategories(),
+                        reader.getValueDisplay(v).getString(),
+                        tier);
+            } else if (value instanceof SpecialAbilityGearAttribute) {
+                String ability = ((SpecialAbilityGearAttribute) value).getAbilityKey();
+                String modification = ((SpecialAbilityGearAttribute) value).getModification().getKey().toString();
+                var v = ((SpecialAbilityGearAttribute) value).getValue();
+                if (v instanceof IntValue) {
+                    try {
+
+                        Integer min = (Integer) FieldUtils.readField(
+                                ((SpecialAbilityTierConfig) modifierConfig.minAvailableConfig()).getConfig(), "min",
+                                true);
+                        Integer max = (Integer) FieldUtils.readField(
+                                ((SpecialAbilityTierConfig) modifierConfig.minAvailableConfig()).getConfig(), "max",
+                                true);
+                        return new SpecialAbilityAttribute<Integer>(ability, modification, tier,
+                                ((IntValue) v).getValue(),
+                                min, max, modifier.getCategories());
+                    } catch (IllegalAccessException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                } else if (v instanceof FloatValue) {
+                    try {
+                        Float min = (Float) FieldUtils.readField(
+                                ((SpecialAbilityTierConfig) modifierConfig.minAvailableConfig()).getConfig(), "min",
+                                true);
+                        Float max = (Float) FieldUtils.readField(
+                                ((SpecialAbilityTierConfig) modifierConfig.minAvailableConfig()).getConfig(), "max",
+                                true);
+                        return new SpecialAbilityAttribute<Float>(ability, modification, tier,
+                                ((FloatValue) v).getValue(),
+                                min, max, modifier.getCategories());
+                    } catch (IllegalAccessException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
                 }
+
+            } else if (value instanceof AbilityTriggerOnDamageAttribute) {
+                AbilityTriggerOnDamageAttribute v = (AbilityTriggerOnDamageAttribute) value;
+                Pair<Integer, Float> current = new Pair<Integer, Float>(v.getLevel(), v.getChance());
+                AbilityTriggerOnDamageAttribute.Config min = (AbilityTriggerOnDamageAttribute.Config) modifierConfig
+                        .minAvailableConfig();
+                AbilityTriggerOnDamageAttribute.Config max = (AbilityTriggerOnDamageAttribute.Config) modifierConfig
+                        .maxAvailableConfig();
+                return new CCAbilityTriggerOnDamageAttribute(modifier.getCategories(),
+                        v.getAbilityId(),
+                        current,
+                        tier, new Pair<Integer, Float>(min.getLevel().getMin(), min.getChance().getMin()),
+                        new Pair<Integer, Float>(max.getLevel().getMax(), max.getChance().getMax()));
+            } else if (value instanceof AbilityAreaOfEffectPercentAttribute) {
+                AbilityAreaOfEffectPercentAttribute v = (AbilityAreaOfEffectPercentAttribute) value;
+                AbilityAreaOfEffectPercentAttribute.Config min = (AbilityAreaOfEffectPercentAttribute.Config) modifierConfig
+                        .minAvailableConfig();
+                AbilityAreaOfEffectPercentAttribute.Config max = (AbilityAreaOfEffectPercentAttribute.Config) modifierConfig
+                        .maxAvailableConfig();
+                return new CCAbilityAOEAttribute(modifier.getCategories(),
+                        v.getAbilityKey(),
+                        tier,
+                        v.getAmount(),
+                        min.getMin(),
+                        max.generateMaximumValue());
+            } else if (value instanceof AbilityCooldownPercentAttribute) {
+                AbilityCooldownPercentAttribute v = (AbilityCooldownPercentAttribute) value;
+                AbilityCooldownPercentAttribute.Config min = (AbilityCooldownPercentAttribute.Config) modifierConfig
+                        .minAvailableConfig();
+                AbilityCooldownPercentAttribute.Config max = (AbilityCooldownPercentAttribute.Config) modifierConfig
+                        .maxAvailableConfig();
+                return new CCAbilityCDAttribute(modifier.getCategories(),
+                        v.getAbilityKey(),
+                        tier,
+                        v.getAmount(),
+                        min.getMin(),
+                        max.generateMaximumValue());
+            } else if (value instanceof EffectGearAttribute) {
+                EffectGearAttribute v = (EffectGearAttribute) value;
+
+                Integer min = (Integer) FieldUtils.readField(modifierConfig.minAvailableConfig(), "amplifier", true);
+                Integer max = (Integer) FieldUtils.readField(modifierConfig.maxAvailableConfig(), "amplifier", true);
+                return new CCEffectAttribute(v.getEffect().getDisplayName().getString(),
+                        modifier.getCategories(),
+                        tier,
+                        v.getAmplifier(),
+                        min,
+                        max);
+            } else if (value instanceof EffectTrialAttribute) {
+                EffectTrialAttribute v = (EffectTrialAttribute) value;
+                Integer min = ((EffectTrialAttribute.Config) modifierConfig
+                        .minAvailableConfig()).getDurationTicks().getMin();
+                Integer max = ((EffectTrialAttribute.Config) modifierConfig
+                        .maxAvailableConfig()).getDurationTicks().getMax();
+                return new TrailAttribute(v.getEffectId().toString(), modifier.getCategories(), v.getDurationTicks(),
+                        tier, min, max);
+
             }
-
-        } else if (value instanceof AbilityTriggerOnDamageAttribute) {
-            AbilityTriggerOnDamageAttribute v = (AbilityTriggerOnDamageAttribute) value;
-            v.getAbilityId();
-            v.getChance();
-            v.getLevel();
-            AbilityTriggerOnDamageAttribute.Config min = (AbilityTriggerOnDamageAttribute.Config) modifierConfig
-                    .minAvailableConfig();
-            AbilityTriggerOnDamageAttribute.Config max = (AbilityTriggerOnDamageAttribute.Config) modifierConfig
-                    .maxAvailableConfig();
-
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         }
         HashMap<String, Object> map = new HashMap<>();
         map.put("modifier", modifier.toString());
@@ -221,6 +286,15 @@ public class CCVaultGearAttributeFactory {
             return new ValueAttribute<Integer>("Suffixes", new AffixCategorySet(), (Integer) instance.getValue());
         } else if (instance.getAttribute().equals(ModGearAttributes.IS_LEGENDARY)) {
             return new CCVaultGearAttribute("Legendary", new AffixCategorySet());
+        } else if (instance.getAttribute().equals(ModGearAttributes.UNIQUE_ITEM_KEY)) {
+            return new ValueAttribute<String>("Unique Key", new AffixCategorySet(),
+                    ((ResourceLocation) instance.getValue()).toString());
+        } else if (instance.getAttribute().equals(ModGearAttributes.GEAR_NAME)) {
+            return new ValueAttribute<String>("Gear Name", new AffixCategorySet(),
+                    (String) instance.getValue().toString());
+        } else if (instance.getAttribute().equals(ModGearAttributes.GEAR_UNIQUE_POOL)) {
+            return new ValueAttribute<String>("Unique Pool", new AffixCategorySet(),
+                    ((ResourceLocation) instance.getValue()).toString());
         }
         try {
             // We just try and cast it to see if this instance was cast down from a modifier
@@ -237,7 +311,9 @@ public class CCVaultGearAttributeFactory {
         // Manabloom
         if (value instanceof ManaPerLootAttribute) {
             // Because this has 2 values
-            return new CCManaPerLootAttribute((ManaPerLootAttribute) value, modifier.getCategories());
+            Pair<Integer, Float> v = new Pair<>(((ManaPerLootAttribute) value).getManaGenerated(),
+                    ((ManaPerLootAttribute) value).getManaGenerationChance());
+            return new CCManaPerLootAttribute(modifier.getCategories(), v, 0);
         } else if (value instanceof Boolean) {
             // Having a value for boolean modifiers makes no sense, they are either True, or
             // arent there for us to read ever
@@ -246,6 +322,7 @@ public class CCVaultGearAttributeFactory {
                     modifier.getCategories());
         }
         // Other types we put them in a generic value attribute
-        return new ValueAttribute(modifier.getAttribute().getReader().getModifierName(), new AffixCategorySet(), value);
+        return new TieredValueAttribute(modifier.getAttribute().getReader().getModifierName(), new AffixCategorySet(),
+                value, 0);
     }
 }

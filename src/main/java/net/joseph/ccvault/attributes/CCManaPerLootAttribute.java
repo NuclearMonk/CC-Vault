@@ -2,24 +2,24 @@ package net.joseph.ccvault.attributes;
 
 import java.util.HashMap;
 
+import com.mojang.datafixers.util.Pair;
+
 import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
 import iskallia.vault.gear.attribute.custom.loot.ManaPerLootAttribute;
 
-public class CCManaPerLootAttribute extends CCVaultGearAttribute{
+public class CCManaPerLootAttribute extends TieredValueAttribute<Pair<Integer, Float>>{
     
-    ManaPerLootAttribute value;
 
-    public CCManaPerLootAttribute(ManaPerLootAttribute value, AffixCategorySet categories) {
-        super("Manabloom", categories);
-        this.value = value;
+    public CCManaPerLootAttribute( AffixCategorySet categories,Pair<Integer, Float> value, int tier ) {
+        super("Manabloom", categories, value, tier);
     }
 
     
     
-    public HashMap<String, Object> toLuaTable(ManaPerLootAttribute attr) {
+    public HashMap<String, Object> toLuaTable(Pair<Integer, Float> value) {
         HashMap<String, Object> map = new HashMap<>();
-        map.put("Mana", attr.getManaGenerated());
-        map.put("Chance", attr.getManaGenerationChance());
+        map.put("Mana", value.getFirst());
+        map.put("Chance", value.getSecond());
         return map;
     }
 
