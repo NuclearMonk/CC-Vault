@@ -93,7 +93,10 @@ public class CCVaultGearAttributeFactory {
 
 			} else if (value instanceof Boolean) {
 				return new CCVaultGearAttribute(name, modifier.getCategories());
-			} else if (value instanceof ManaPerLootAttribute) {
+
+			} else if (value instanceof String) {
+				return new ValueAttribute<String>(name, modifier.getCategories(), (String)value);
+			}else if (value instanceof ManaPerLootAttribute) {
 				Pair<Integer, Float> v = new Pair<>(((ManaPerLootAttribute) value).getManaGenerated(),
 						((ManaPerLootAttribute) value).getManaGenerationChance());
 				ManaPerLootAttribute.Config min_cfg = ((ManaPerLootAttribute.Config) modifierConfig
