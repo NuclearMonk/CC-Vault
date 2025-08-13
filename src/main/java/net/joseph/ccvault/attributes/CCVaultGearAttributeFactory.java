@@ -84,55 +84,51 @@ public class CCVaultGearAttributeFactory {
 						tier,
 						min,
 						max);
-			} else if (value instanceof String) {
-				return new ValueAttribute<String>(name, modifier.getCategories(), (String) value);
-			} else if (value instanceof ManaPerLootAttribute) {
-				return RangedManaPerLootAttribute.from((VaultGearModifier<ManaPerLootAttribute>) modifier, config);
-			} else if (value instanceof EffectAvoidanceListGearAttribute) {
-				return CCEffectAvoidanceAttribute.from((VaultGearModifier<EffectAvoidanceListGearAttribute>) modifier,
-						config);
-			} else if (value instanceof EffectAvoidanceGearAttribute) {
-				return CCEffectAvoidanceAttribute.from((VaultGearModifier<EffectAvoidanceGearAttribute>) modifier,
-						config);
-			} else if (value instanceof AbilityLevelAttribute) {
-				return CCAbilityLevelAttribute.from((VaultGearModifier<AbilityLevelAttribute>) modifier, config);
-			} else if (value instanceof EffectCloudAttribute) {
-				return CCEffectCloudAttribute.from((VaultGearModifier<EffectCloudAttribute>) modifier, config);
-			} else if (value instanceof SpecialAbilityGearAttribute) {
-				return CCSpecialAbilityAttribute.from((VaultGearModifier<SpecialAbilityGearAttribute>) modifier,
-						config);
-			} else if (value instanceof AbilityTriggerOnDamageAttribute) {
-				return CCAbilityTriggerOnDamageAttribute.from(
-						(VaultGearModifier<AbilityTriggerOnDamageAttribute>) modifier,
-						config);
-			} else if (value instanceof AbilityAreaOfEffectPercentAttribute) {
-				return CCAbilityAOEAttribute.from((VaultGearModifier<AbilityAreaOfEffectPercentAttribute>) modifier,
-						config);
-			} else if (value instanceof AbilityCooldownPercentAttribute) {
-				return CCAbilityCDAttribute.from((VaultGearModifier<AbilityCooldownPercentAttribute>) modifier, config);
-			} else if (value instanceof EffectGearAttribute) {
-				return CCEffectAttribute.from((VaultGearModifier<EffectGearAttribute>) modifier, config);
-			} else if (value instanceof EffectTrialAttribute) {
-				return TrailAttribute.from((VaultGearModifier<EffectTrialAttribute>) modifier, config);
-
 			}
 		} catch (
 
 		IllegalAccessException e) {
 			e.printStackTrace();
 		}
+		if (value instanceof String) {
+			return new ValueAttribute<String>(name, modifier.getCategories(), (String) value);
+		} else if (value instanceof ManaPerLootAttribute) {
+			return RangedManaPerLootAttribute.from((VaultGearModifier<ManaPerLootAttribute>) modifier, config);
+		} else if (value instanceof EffectAvoidanceListGearAttribute) {
+			return CCEffectAvoidanceAttribute.from((VaultGearModifier<EffectAvoidanceListGearAttribute>) modifier,
+					config);
+		} else if (value instanceof EffectAvoidanceGearAttribute) {
+			return CCEffectAvoidanceAttribute.from((VaultGearModifier<EffectAvoidanceGearAttribute>) modifier,
+					config);
+		} else if (value instanceof AbilityLevelAttribute) {
+			return CCAbilityLevelAttribute.from((VaultGearModifier<AbilityLevelAttribute>) modifier, config);
+		} else if (value instanceof EffectCloudAttribute) {
+			return CCEffectCloudAttribute.from((VaultGearModifier<EffectCloudAttribute>) modifier, config);
+		} else if (value instanceof SpecialAbilityGearAttribute) {
+			return CCSpecialAbilityAttribute.from((VaultGearModifier<SpecialAbilityGearAttribute>) modifier,
+					config);
+		} else if (value instanceof AbilityTriggerOnDamageAttribute) {
+			return CCAbilityTriggerOnDamageAttribute.from(
+					(VaultGearModifier<AbilityTriggerOnDamageAttribute>) modifier,
+					config);
+		} else if (value instanceof AbilityAreaOfEffectPercentAttribute) {
+			return CCAbilityAOEAttribute.from((VaultGearModifier<AbilityAreaOfEffectPercentAttribute>) modifier,
+					config);
+		} else if (value instanceof AbilityCooldownPercentAttribute) {
+			return CCAbilityCDAttribute.from((VaultGearModifier<AbilityCooldownPercentAttribute>) modifier, config);
+		} else if (value instanceof EffectGearAttribute) {
+			return CCEffectAttribute.from((VaultGearModifier<EffectGearAttribute>) modifier, config);
+		} else if (value instanceof EffectTrialAttribute) {
+			return CCEffectTrailAttribute.from((VaultGearModifier<EffectTrialAttribute>) modifier, config);
+
+		}
+
 		HashMap<String, Object> map = new HashMap<>();
 		map.put("modifier", modifier.toString());
 		map.put("value", value.toString());
-		map.put("configRange", config.toString());
 		return new DebugAttribute(map);
-
 	}
 
-	// private static <T> List<T> castList(List<Object> list) {
-	// return list.stream()
-	// .map(o -> (T) o).collect(Collectors.toList());
-	// }
 
 	private static VaultGearTierConfig.ModifierConfigRange getModifierConfigForLevel(ItemStack stack,
 			VaultGearModifier<?> modifier, int level) {
@@ -145,7 +141,6 @@ public class CCVaultGearAttributeFactory {
 
 	public static CCVaultGearAttribute parse(ItemStack stack, VaultGearAttributeInstance<?> instance,
 			VaultGearData data) {
-
 		if (instance.getAttribute().equals(ModGearAttributes.CRAFTING_POTENTIAL)) {
 			return new ValueAttribute<Integer>("Crafting Potential", new AffixCategorySet(),
 					(Integer) instance.getValue());
@@ -196,7 +191,7 @@ public class CCVaultGearAttributeFactory {
 			// Because this has 2 values
 			Pair<Integer, Float> v = new Pair<>(((ManaPerLootAttribute) value).getManaGenerated(),
 					((ManaPerLootAttribute) value).getManaGenerationChance());
-			return new CCManaPerLootAttribute(modifier.getCategories(), v, 0);
+			return new CCManaPerLootAttribute(modifier.getCategories(), v);
 		} else if (value instanceof Boolean) {
 			// Having a value for boolean modifiers makes no sense, they are either True, or
 			// arent there for us to read ever

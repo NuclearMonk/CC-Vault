@@ -8,11 +8,11 @@ import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
 import iskallia.vault.gear.attribute.custom.loot.ManaPerLootAttribute;
 
 @SuppressWarnings("unused")
-public class CCManaPerLootAttribute extends TieredValueAttribute<Pair<Integer, Float>>{
+public class CCManaPerLootAttribute extends ValueAttribute<Pair<Integer, Float>>{
     
 
-    public CCManaPerLootAttribute( AffixCategorySet categories,Pair<Integer, Float> value, int tier ) {
-        super("Manabloom", categories, value, tier);
+    public CCManaPerLootAttribute( AffixCategorySet categories,Pair<Integer, Float> value) {
+        super("Manabloom", categories, value);
     }
 
     
