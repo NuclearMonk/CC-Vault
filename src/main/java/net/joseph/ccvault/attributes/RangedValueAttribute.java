@@ -16,11 +16,13 @@ public class RangedValueAttribute<T> extends TieredValueAttribute<T> {
         return max;
     }
 
-    public RangedValueAttribute(String name, AffixCategorySet categories, T value,int tier, T min, T max) {
-        super(name, categories, value,tier);
+    public RangedValueAttribute(String name, AffixCategorySet categories, T value, int tier, T min, T max) {
+        super(name, categories, value, tier);
         this.min = min;
         this.max = max;
     }
+
+    
 
     @Override
     public HashMap<String, Object> toLuaTable() {

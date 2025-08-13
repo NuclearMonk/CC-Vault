@@ -7,6 +7,7 @@ import com.mojang.datafixers.util.Pair;
 import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
 import iskallia.vault.gear.attribute.custom.loot.ManaPerLootAttribute;
 
+@SuppressWarnings("unused")
 public class CCManaPerLootAttribute extends TieredValueAttribute<Pair<Integer, Float>>{
     
 
