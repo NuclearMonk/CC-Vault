@@ -296,61 +296,27 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
     }
 
     @LuaFunction
-    public final String getImplicit(int index) {
+    public final List<HashMap<String, Object>> getImplicits() {
+        var stack = be.getItemStack();
         VaultGearData data = VaultGearData.read(be.getItemStack());
-        VaultGearModifier.AffixType type = VaultGearModifier.AffixType.IMPLICIT;
-        ItemStack stack = be.getItemStack();
-        Boolean displayDetail = true;
-        List<VaultGearModifier<?>> affixes = data.getModifiers(type);
-
-        if (index >= affixes.size()) {
-            return "null";
-        }
-        VaultGearModifier affix = affixes.get(index);
-
-        MutableComponent component = (MutableComponent) getDisplay(affix, data, type, stack, displayDetail).get();
-        return component.getString();
-
+        return data.getModifiers(AffixType.IMPLICIT).stream()
+                .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable()).toList();
     }
 
     @LuaFunction
-    public final String getPrefix(int index) {
+    public final List<HashMap<String, Object>> getPrefixes() {
+        var stack = be.getItemStack();
         VaultGearData data = VaultGearData.read(be.getItemStack());
-        VaultGearModifier.AffixType type = VaultGearModifier.AffixType.PREFIX;
-        ItemStack stack = be.getItemStack();
-        Boolean displayDetail = true;
-        List<VaultGearModifier<?>> affixes = data.getModifiers(type);
-
-        if (affixes.size() > index) {
-            VaultGearModifier affix = affixes.get(index);
-            MutableComponent component = (MutableComponent) getDisplay(affix, data, type, stack, displayDetail).get();
-            return component.getString();
-        }
-        if (this.getPrefixCount() > index) {
-            return "empty";
-        }
-        return "null";
-
+        return data.getModifiers(AffixType.PREFIX).stream()
+                .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable()).toList();
     }
 
     @LuaFunction
-    public final String getSuffix(int index) {
+    public final List<HashMap<String, Object>> getSuffixes() {
+        var stack = be.getItemStack();
         VaultGearData data = VaultGearData.read(be.getItemStack());
-        VaultGearModifier.AffixType type = VaultGearModifier.AffixType.SUFFIX;
-        ItemStack stack = be.getItemStack();
-        Boolean displayDetail = true;
-        List<VaultGearModifier<?>> affixes = data.getModifiers(type);
-
-        if (affixes.size() > index) {
-            VaultGearModifier affix = affixes.get(index);
-
-            MutableComponent component = (MutableComponent) getDisplay(affix, data, type, stack, displayDetail).get();
-            return component.getString();
-        }
-        if (this.getSuffixCount() > index) {
-            return "empty";
-        }
-        return "null";
+        return data.getModifiers(AffixType.SUFFIX).stream()
+                .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable()).toList();
     }
 
     @LuaFunction
@@ -369,126 +335,6 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
     public final int getSuffixCount() {
         VaultGearData data = VaultGearData.read(be.getItemStack());
         return (Integer) data.getFirstValue(ModGearAttributes.SUFFIXES).orElse(0);
-    }
-
-    public static boolean isNumber(String num) {
-        if (num == null) {
-            return false;
-        }
-        try {
-            double d = Double.parseDouble(num);
-        } catch (NumberFormatException nfe) {
-            return false;
-        }
-        return true;
-    }
-
-    @LuaFunction
-    public final double getModifierValue(String modifier) {
-        boolean flag = false;
-        int flagint = 0;
-        for (int i = 0; i < modifier.length(); i++) {
-            if (isNumber(String.valueOf(modifier.charAt(i)))) {
-                flag = true;
-                flagint = i;
-                i = 100000;
-            }
-        }
-        if (modifier.contains("IV")) {
-            return 4;
-        }
-        if (modifier.contains("V ")) {
-            return 5;
-        }
-        if (modifier.contains("III")) {
-            return 3;
-        }
-        if (modifier.contains("II")) {
-            return 2;
-        }
-
-        if (!flag) {
-            return 1;
-        }
-        String tempnum = String.valueOf(modifier.charAt(flagint));
-        for (int i = flagint + 1; i < modifier.length(); i++) {
-            if (isNumber(String.valueOf(modifier.charAt(i))) || String.valueOf(modifier.charAt(i)).equals(".")) {
-                tempnum = tempnum + (String.valueOf(modifier.charAt(i)));
-            } else {
-                i = 100000;
-            }
-        }
-        return Double.parseDouble(tempnum);
-
-    }
-
-    @LuaFunction
-    public final double getMaximumRoll(String modifier) {
-        if (!modifier.contains("-")) {
-            return this.getModifierValue(modifier);
-        }
-        int baseIndex = modifier.indexOf('-') + 1;
-        String tempnum = String.valueOf(modifier.charAt(baseIndex));
-        for (int i = baseIndex + 1; i < modifier.length(); i++) {
-            if (isNumber(String.valueOf(modifier.charAt(i))) || String.valueOf(modifier.charAt(i)).equals(".")) {
-                tempnum = tempnum + (String.valueOf(modifier.charAt(i)));
-            } else {
-                i = 100000;
-            }
-        }
-        return Double.parseDouble(tempnum);
-    }
-
-    @LuaFunction
-    public final double getMinimumRoll(String modifier) {
-        if (!modifier.contains("(")) {
-            return this.getModifierValue(modifier);
-        }
-        int baseIndex = modifier.indexOf('(') + 1;
-        String tempnum = String.valueOf(modifier.charAt(baseIndex));
-        for (int i = baseIndex + 1; i < modifier.length(); i++) {
-            if (isNumber(String.valueOf(modifier.charAt(i))) || String.valueOf(modifier.charAt(i)).equals(".")) {
-                tempnum = tempnum + (String.valueOf(modifier.charAt(i)));
-            } else {
-                i = 100000;
-            }
-        }
-
-        return Double.parseDouble(tempnum);
-    }
-
-    @LuaFunction
-    public final String getName(String modifier) {
-        String toReturn = "";
-        boolean isCloud = (modifier.contains("Cloud"));
-        for (int i = 0; i < modifier.length(); i++) {
-            if (Character.isAlphabetic(modifier.charAt(i))
-                    && !(isCloud && (modifier.charAt(i) == 'I' || modifier.charAt(i) == 'V'))) {
-                toReturn = toReturn + String.valueOf(modifier.charAt(i));
-            }
-            if (modifier.charAt(i) == '[' || modifier.charAt(i) == '(') {
-                i = 10000;
-            }
-        }
-        return toReturn;
-    }
-
-    @LuaFunction
-    public final String getType(String modifier) {
-        char firstchar = modifier.charAt(0);
-        if (firstchar == 'e') {
-            return "empty";
-        }
-        if (firstchar == 'n') {
-            return "null";
-        }
-        if (modifier.contains("Crafted")) {
-            return "crafted";
-        }
-        if (modifier.contains("Legendary")) {
-            return "legendary";
-        }
-        return "regular";
     }
 
     // in seconds
@@ -565,14 +411,14 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
 
         gear.put("Level", data.getItemLevel());
         gear.put("Rarity", data.getRarity().getDisplayName().getString());
-        
 
-        // Return early in case the gear isn't identified as there is no more data to be read
+        // Return early in case the gear isn't identified as there is no more data to be
+        // read
         switch (data.getState()) {
             case UNIDENTIFIED:
             case ROLLING:
-            gear.put("Identified", false);
-            return gear;
+                gear.put("Identified", false);
+                return gear;
             default:
                 gear.put("Identified", true);
 
@@ -590,14 +436,13 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
             default:
                 break;
         }
-        if (data.getRarity() != VaultGearRarity.UNIQUE){
+        if (data.getRarity() != VaultGearRarity.UNIQUE) {
             gear.put("PrefixSlots", data.getFirstValue(ModGearAttributes.PREFIXES).get());
             gear.put("SuffixSlots", data.getFirstValue(ModGearAttributes.SUFFIXES).get());
-            gear.put("CraftingPotential", getCraftingPotential(data));   
+            gear.put("CraftingPotential", getCraftingPotential(data));
         }
-        gear.put("RepairSlots", getRepair_slots(data));
+        gear.put("RepairSlots", getRepairslots(data));
         gear.put("Durability", getDurability(stack));
-
 
         List<HashMap<String, Object>> attributes = new ArrayList<HashMap<String, Object>>();
         data.getAttributes().forEach(instance -> {
@@ -635,20 +480,19 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
 
     }
 
-
     private HashMap<String, Object> getToolDetails(ItemStack stack) {
         VaultGearData data = VaultGearData.read(stack);
         HashMap<String, Object> gear = new HashMap<>();
         gear.put("Level", data.getItemLevel());
         gear.put("Rarity", data.getRarity().getDisplayName().getString());
-        gear.put("RepairSlots", getRepair_slots(data));
+        gear.put("RepairSlots", getRepairslots(data));
         gear.put("Durability", getDurability(stack));
         List<HashMap<String, Object>> prefixes = data.getModifiers(AffixType.PREFIX).stream()
-                .map(modifier ->  CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
+                .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
                 .collect(Collectors.toList());
         gear.put("Prefixes", prefixes);
         List<HashMap<String, Object>> suffixes = data.getModifiers(AffixType.SUFFIX).stream()
-                .map(modifier ->  CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
+                .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
                 .collect(Collectors.toList());
         gear.put("Suffixes", suffixes);
         return gear;
@@ -673,7 +517,7 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         return craft_potential;
     }
 
-    private HashMap<String, Integer> getRepair_slots(VaultGearData data) {
+    private HashMap<String, Integer> getRepairslots(VaultGearData data) {
         HashMap<String, Integer> repair_slots = new HashMap<>();
         repair_slots.put("Total", data.getRepairSlots());
         repair_slots.put("Used", data.getUsedRepairSlots());
