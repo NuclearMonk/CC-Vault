@@ -7,6 +7,77 @@
 ---| "EPIC"
 ---| "OMEGA"
 
+---@alias ItemTypes
+---|"Charm"
+---|"Trinket"
+---|"Jewel"
+---|"Inscription"
+---|"Tool"
+---|"Gear"
+---|"Catalyst"
+---|"Unknown"
+
+
+---@class GearModifier
+---@field name string
+
+---@class ValueModifier : GearModifier
+---@field value string | integer | number
+---@field Legendary? boolean
+---@field Crafted? boolean
+---@field Unusual? boolean
+---@field Greater? boolean
+---@field Frozen? boolean
+
+---@class RangedModifier : ValueModifier
+---@field tier  integer
+---@field min  integer | number
+---@field max  integer | number
+
+---@class RepairSlots
+---@field Total integer Total Repair Slots
+---@field Used integer Slots Already Used Up
+
+---@class Durability
+---@field Total integer Total Durability
+---@field Current integer Current Durability
+
+---@class Jewel
+---@field Name string the name of the item
+---@field Type "Jewel"
+---@field Level integer The Jewel Level
+---@field Rarity Rarity The Jewels Rarity
+---@field Implicits (GearModifier|ValueModifier|RangedModifier)[]
+---@field Preffixes (GearModifier|ValueModifier|RangedModifier)[]
+---@field Suffixes (GearModifier|ValueModifier|RangedModifier)[]
+
+---@class Tool
+---@field Name string the name of the item
+---@field Type "Tool"
+---@field Level integer The Tool Level
+---@field Rarity Rarity The Tool Rarity
+---@field RepairSlots RepairSlots
+---@field Durability Durability
+---@field Implicits (GearModifier|ValueModifier)[]
+---@field Preffixes (GearModifier|ValueModifier)[]
+---@field Suffixes (GearModifier|ValueModifier)[]
+
+---@class UnidentifiedGear
+---@field Name string the name of the item
+---@field Type "Gear"
+---@field Level integer The Tool Level
+---@field Rarity Rarity The Tool Rarity
+---@field Identified false Is The gear Identified
+
+---@class Gear : UnidentifiedGear
+---@field Identified true
+---@field RepairSlots RepairSlots
+---@field Durability Durability
+---@field Attributes (GearModifier|ValueModifier|RangedModifier)[]
+---@field Implicits (GearModifier|ValueModifier|RangedModifier)[]
+---@field Preffixes (GearModifier|ValueModifier|RangedModifier)[]
+---@field Suffixes (GearModifier|ValueModifier|RangedModifier)[]
+
 ---@class vaultReader: inventory
 local reader = {}
 
@@ -31,64 +102,28 @@ function reader.getPrefixCount() end
 ---@return integer count the amount of suffix slots the item has (including empty ones)
 function reader.getSuffixCount() end
 
-
-
 ---@class modifierString: string
 
----@param index integer # 0 indexed
----@return modifierString modifier **modifierString**
---- returns "null" if index out of bounds
-function reader.getImplicit(index) end
+---@return (GearModifier|ValueModifier|RangedModifier)[]
+function reader.getImplicits(index) end
 
----@param index integer # 0 indexed
----@return modifierString modifier **modifierString**
---- returns "null" if index out of bounds
---- returns "empty" if modifier slot is empty
-function reader.getPrefix(index) end
+---@return (GearModifier|ValueModifier|RangedModifier)[]
+function reader.getPrefixes() end
 
----@param index integer # 0 indexed
----@return modifierString modifier **modifierString**
---- returns "null" if index out of bounds
---- returns "empty" if modifier slot is empty
-function reader.getSuffix(index) end
+---@return (GearModifier|ValueModifier|RangedModifier)[]
+function reader.getSuffixes() end
 
----@param modifier modifierString
----@return number # numerical value of modifier
--- **1.6 Attack Speed** -> 1.6
--- **Size 15** -> 15
--- **15% Undead Damage** -> 15
--- **Poison IV Cloud** -> 4
--- **Soulbound** -> 1
-function reader.getModifierValue(modifier) end
+---@return ItemTypes |
+---| nil # if the slot is empty
+function reader.getItemType() end
 
----@param modifier modifierString
----@return number max maximum roll for a modifier of current tier
--- **1.6 Attack Speed(1.2-1.8)** -> 1.8
--- **15% Undead Damage(10%-45%)** -> 45
--- **Poison IV Cloud** -> 4
--- **Soulbound** -> 1
-function reader.getMaximumRoll(modifier) end
+---@return Jewel
+---| nil # if the slot is empty
+function reader.getJewelDetails() end
 
----@param modifier modifierString
----@return number min minimum roll for a modifier of current tier
--- **1.6 Attack Speed(1.2-1.8)** -> 1.2
--- **15% Undead Damage(10%-45%)** -> 10
--- **Poison IV Cloud** -> 4
--- **Soulbound** -> 1
-function reader.getMinimumRoll(modifier) end
+---@return Tool
+---| nil # if the slot is empty
+function reader.getToolDetails() end
 
----@param modifier modifierString
----@return string type 
--- **15% Undead Damage** -> "UndeadDamage"
--- **Chilling IV Cloud** -> "ChillingCloud"
-function reader.getName(modifier) end
-
----@param modifier modifierString
----@return 
----| 'empty' # empty modifier slot
----| 'null' # has not been found on a piece
----| 'crafted' # modifier that's been crafted onto the gear piece via the modifier workbench
----| 'legendary' # legendary roll modifier
----| 'regular' # all else
-function reader.getType(modifier) end
-
+---@return UnidentifiedGear | Gear |nil
+function reader.getGearDetails() end

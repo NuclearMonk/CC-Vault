@@ -365,7 +365,6 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         return data.getEntries().get(0).toRoomEntry().getName().getString();
     }
 
-    @LuaFunction
     public final Object getItemDetails() {
         ItemStack stack = be.getItemStack();
         if (stack == null) {
@@ -373,22 +372,29 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         }
         switch (getItemType()) {
             case "Jewel":
-                return getJewelDetails(stack);
+                return getJewelDetails();
             case "Gear":
-                return getGearDetails(stack);
+                return getGearDetails();
             case "Tool":
-                return getToolDetails(stack);
+                return getToolDetails();
             default:
                 break;
         }
         return null;
     }
 
-    private HashMap<String, Object> getJewelDetails(ItemStack stack) {
-
+    @LuaFunction
+    public HashMap<String, Object> getJewelDetails() {
+        ItemStack stack = be.getItemStack();
+        if (stack == null) {
+            return null;
+        }
         VaultGearData data = VaultGearData.read(stack);
         HashMap<String, Object> jewel = new HashMap<>();
+        jewel.put("Name", stack.getDisplayName().getString());
+        jewel.put("Type", "Jewel");
         jewel.put("Level", data.getItemLevel());
+        jewel.put("Rarity", data.getRarity().getDisplayName().getString());
         List<HashMap<String, Object>> implicits = data.getModifiers(AffixType.IMPLICIT).stream()
                 .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
                 .collect(Collectors.toList());
@@ -405,13 +411,19 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
 
     }
 
-    private HashMap<String, Object> getGearDetails(ItemStack stack) {
+    @LuaFunction
+    public HashMap<String, Object> getGearDetails() {
+        ItemStack stack = be.getItemStack();
+        if (stack == null) {
+            return null;
+        }
         VaultGearData data = VaultGearData.read(stack);
         HashMap<String, Object> gear = new HashMap<>();
 
         gear.put("Level", data.getItemLevel());
         gear.put("Rarity", data.getRarity().getDisplayName().getString());
-
+        gear.put("Name", stack.getDisplayName().getString());
+        gear.put("Type", "Gear");
         // Return early in case the gear isn't identified as there is no more data to be
         // read
         switch (data.getState()) {
@@ -424,7 +436,6 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
 
                 break;
         }
-        gear.put("Identified", true);
         switch (VaultGearItem.of(stack).getGearType(stack)) {
             case HELMET:
             case CHESTPLATE:
@@ -480,22 +491,29 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
 
     }
 
-    private HashMap<String, Object> getToolDetails(ItemStack stack) {
+    @LuaFunction
+    public HashMap<String, Object> getToolDetails() {
+        ItemStack stack = be.getItemStack();
+        if (stack == null) {
+            return null;
+        }
         VaultGearData data = VaultGearData.read(stack);
-        HashMap<String, Object> gear = new HashMap<>();
-        gear.put("Level", data.getItemLevel());
-        gear.put("Rarity", data.getRarity().getDisplayName().getString());
-        gear.put("RepairSlots", getRepairslots(data));
-        gear.put("Durability", getDurability(stack));
+        HashMap<String, Object> tool = new HashMap<>();
+        tool.put("Name", stack.getDisplayName().getString());
+        tool.put("Type", "Tool");
+        tool.put("Level", data.getItemLevel());
+        tool.put("Rarity", data.getRarity().getDisplayName().getString());
+        tool.put("RepairSlots", getRepairslots(data));
+        tool.put("Durability", getDurability(stack));
         List<HashMap<String, Object>> prefixes = data.getModifiers(AffixType.PREFIX).stream()
                 .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
                 .collect(Collectors.toList());
-        gear.put("Prefixes", prefixes);
+        tool.put("Prefixes", prefixes);
         List<HashMap<String, Object>> suffixes = data.getModifiers(AffixType.SUFFIX).stream()
                 .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
                 .collect(Collectors.toList());
-        gear.put("Suffixes", suffixes);
-        return gear;
+        tool.put("Suffixes", suffixes);
+        return tool;
 
     }
 
