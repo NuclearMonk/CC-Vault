@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -337,39 +338,27 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         return (Integer) data.getFirstValue(ModGearAttributes.SUFFIXES).orElse(0);
     }
 
-    // in seconds
-    // @LuaFunction
-    // public final int getTime() {
-    // InscriptionData data = InscriptionData.from(be.getItemStack());
-    // return ((InscriptionDataAccessor) data).getTime() / 20;
-    //
-    // }
-    // @LuaFunction
-    // public final int getCompletion() {
-    // InscriptionData data = InscriptionData.from(be.getItemStack());
-    // return Math.round( ((InscriptionDataAccessor) data).getCompletion() *
-    // 100.0F);
-    // }
-    // @LuaFunction
-    // public final double getInstability() {
-    // InscriptionData data = InscriptionData.from(be.getItemStack());
-    // return ((InscriptionDataAccessor) data).getInstability() * 100.0F;
-    // }
 
     @LuaFunction
-    public final String getRoom() {
-        InscriptionData data = InscriptionData.from(be.getItemStack());
-        if (data.getEntries().size() == 0) {
-            return "Empty";
+    public final HashMap<String, Object> getInscriptionDetails() {
+        ItemStack stack = be.getItemStack();
+        if (stack == ItemStack.EMPTY) {
+            return null;
         }
-        return data.getEntries().get(0).toRoomEntry().getName().getString();
+        HashMap<String, Object> map = new HashMap<>();
+        InscriptionData data = InscriptionData.from(stack);
+        map.put("Size", data.getSize());
+        map.put("Rooms", data.getEntries().stream().map(r -> r.toRoomEntry().getName().getString())
+                .collect(Collectors.toList()));
+        return map;
     }
 
     public final Object getItemDetails() {
         ItemStack stack = be.getItemStack();
-        if (stack == null) {
+        if (stack == ItemStack.EMPTY) {
             return null;
         }
+        
         switch (getItemType()) {
             case "Jewel":
                 return getJewelDetails();
@@ -386,7 +375,7 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
     @LuaFunction
     public HashMap<String, Object> getJewelDetails() {
         ItemStack stack = be.getItemStack();
-        if (stack == null) {
+        if (stack == ItemStack.EMPTY) {
             return null;
         }
         VaultGearData data = VaultGearData.read(stack);
@@ -414,7 +403,7 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
     @LuaFunction
     public HashMap<String, Object> getGearDetails() {
         ItemStack stack = be.getItemStack();
-        if (stack == null) {
+        if (stack == ItemStack.EMPTY) {
             return null;
         }
         VaultGearData data = VaultGearData.read(stack);
@@ -494,7 +483,7 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
     @LuaFunction
     public HashMap<String, Object> getToolDetails() {
         ItemStack stack = be.getItemStack();
-        if (stack == null) {
+        if (stack == ItemStack.EMPTY) {
             return null;
         }
         VaultGearData data = VaultGearData.read(stack);
@@ -547,7 +536,7 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         // Returns the type of item in the vault reader slot, returns Unknown if its not
         // a vault item, and nil on an empty slot.
         ItemStack stack = be.getItemStack();
-        if (stack == null) {
+        if (stack == ItemStack.EMPTY) {
             return null;
         }
         Item item = stack.getItem();
