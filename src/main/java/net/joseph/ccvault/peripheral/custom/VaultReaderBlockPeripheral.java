@@ -25,6 +25,8 @@ import iskallia.vault.gear.attribute.VaultGearModifier.AffixType;
 import iskallia.vault.gear.attribute.config.ConfigurableAttributeGenerator;
 import iskallia.vault.gear.data.VaultGearData;
 import iskallia.vault.gear.item.VaultGearItem;
+import iskallia.vault.gear.trinket.TrinketEffect;
+import iskallia.vault.gear.trinket.TrinketHelper.TrinketStack;
 import iskallia.vault.init.ModGearAttributes;
 import iskallia.vault.item.InfusedCatalystItem;
 import iskallia.vault.item.InscriptionItem;
@@ -338,40 +340,6 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         return (Integer) data.getFirstValue(ModGearAttributes.SUFFIXES).orElse(0);
     }
 
-
-    @LuaFunction
-    public final HashMap<String, Object> getInscriptionDetails() {
-        ItemStack stack = be.getItemStack();
-        if (stack == ItemStack.EMPTY) {
-            return null;
-        }
-        HashMap<String, Object> map = new HashMap<>();
-        InscriptionData data = InscriptionData.from(stack);
-        map.put("Size", data.getSize());
-        map.put("Rooms", data.getEntries().stream().map(r -> r.toRoomEntry().getName().getString())
-                .collect(Collectors.toList()));
-        return map;
-    }
-
-    public final Object getItemDetails() {
-        ItemStack stack = be.getItemStack();
-        if (stack == ItemStack.EMPTY) {
-            return null;
-        }
-        
-        switch (getItemType()) {
-            case "Jewel":
-                return getJewelDetails();
-            case "Gear":
-                return getGearDetails();
-            case "Tool":
-                return getToolDetails();
-            default:
-                break;
-        }
-        return null;
-    }
-
     @LuaFunction
     public HashMap<String, Object> getJewelDetails() {
         ItemStack stack = be.getItemStack();
@@ -532,6 +500,33 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
     }
 
     @LuaFunction
+    public final HashMap<String, Object> getInscriptionDetails() {
+        ItemStack stack = be.getItemStack();
+        if (stack == ItemStack.EMPTY) {
+            return null;
+        }
+        HashMap<String, Object> map = new HashMap<>();
+        InscriptionData data = InscriptionData.from(stack);
+        map.put("Size", data.getSize());
+        map.put("Rooms", data.getEntries().stream().map(r -> r.toRoomEntry().getName().getString())
+                .collect(Collectors.toList()));
+        return map;
+    }
+
+    @LuaFunction
+    public final HashMap<String, Object> getTrinketDetails() {
+        ItemStack stack = be.getItemStack();
+        if (stack == ItemStack.EMPTY) {
+            return null;
+        }
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("Name", stack.getItem().getName(stack).getString());
+        map.put("Uses",TrinketItem.getUses(stack));
+        map.put("Slot",TrinketItem.getSlotIdentifier(stack).get());
+        return map;
+    }
+
+    @LuaFunction
     public final String getItemType() {
         // Returns the type of item in the vault reader slot, returns Unknown if its not
         // a vault item, and nil on an empty slot.
@@ -540,9 +535,7 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
             return null;
         }
         Item item = stack.getItem();
-        if (item instanceof CharmItem) {
-            return "Charm";
-        } else if (item instanceof TrinketItem) {
+        if (item instanceof TrinketItem) {
             return "Trinket";
         } else if (item instanceof JewelItem) {
             return "Jewel";
