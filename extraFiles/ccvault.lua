@@ -20,14 +20,15 @@
 
 ---@class GearModifier
 ---@field name string
-
----@class ValueModifier : GearModifier
----@field value string | integer | number
 ---@field Legendary? boolean
 ---@field Crafted? boolean
 ---@field Unusual? boolean
 ---@field Greater? boolean
 ---@field Frozen? boolean
+
+---@class ValueModifier : GearModifier
+---@field value string | integer | number
+
 
 ---@class RangedModifier : ValueModifier
 ---@field tier  integer
@@ -78,6 +79,19 @@
 ---@field Preffixes (GearModifier|ValueModifier|RangedModifier)[]
 ---@field Suffixes (GearModifier|ValueModifier|RangedModifier)[]
 
+---@class Trinket
+---@field Uses integer
+---@field Slot string
+---@field Name string
+
+---@class Inscription
+---@field Size integer
+---@field Rooms string[]
+
+---@class Catalyst
+---@field Size integer
+---@field Modifiers string[]
+
 ---@class vaultReader: inventory
 local reader = {}
 
@@ -119,11 +133,26 @@ function reader.getItemType() end
 
 ---@return Jewel
 ---| nil # if the slot is empty
+---@throws If the item isnt Jewel
 function reader.getJewelDetails() end
 
 ---@return Tool
 ---| nil # if the slot is empty
+---@throws If the item isnt a Tool
 function reader.getToolDetails() end
 
 ---@return UnidentifiedGear | Gear |nil
+---@throws If the item isnt Gear
 function reader.getGearDetails() end
+
+---@return Trinket |nil
+---@throws If the item isnt an Trinket
+function reader.getTrinketDetails() end
+
+---@return Inscription |nil
+---@throws If the item isnt an Inscription
+function reader.getInscriptionDetails() end
+
+---@return Catalyst |nil
+---@throws If the item isnt a Catalyst
+function reader.getCatalystDetails() end
