@@ -341,10 +341,14 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
     }
 
     @LuaFunction
-    public HashMap<String, Object> getJewelDetails() {
+    public HashMap<String, Object> getJewelDetails() throws LuaException {
         ItemStack stack = be.getItemStack();
         if (stack == ItemStack.EMPTY) {
             return null;
+        }
+        Item item = stack.getItem();
+        if (!(item instanceof JewelItem)) {
+            throw new LuaException("Item is not a Jewel");
         }
         VaultGearData data = VaultGearData.read(stack);
         HashMap<String, Object> jewel = new HashMap<>();
@@ -369,10 +373,14 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
     }
 
     @LuaFunction
-    public HashMap<String, Object> getGearDetails() {
+    public HashMap<String, Object> getGearDetails() throws LuaException {
         ItemStack stack = be.getItemStack();
         if (stack == ItemStack.EMPTY) {
             return null;
+        }
+        Item item = stack.getItem();
+        if (!(item instanceof VaultGearItem)) {
+            throw new LuaException("Item is not Gear");
         }
         VaultGearData data = VaultGearData.read(stack);
         HashMap<String, Object> gear = new HashMap<>();
@@ -449,10 +457,14 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
     }
 
     @LuaFunction
-    public HashMap<String, Object> getToolDetails() {
+    public HashMap<String, Object> getToolDetails() throws LuaException {
         ItemStack stack = be.getItemStack();
         if (stack == ItemStack.EMPTY) {
             return null;
+        }
+        Item item = stack.getItem();
+        if (!(item instanceof ToolItem)) {
+            throw new LuaException("Item is not a Tool");
         }
         VaultGearData data = VaultGearData.read(stack);
         HashMap<String, Object> tool = new HashMap<>();
@@ -500,10 +512,14 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
     }
 
     @LuaFunction
-    public final HashMap<String, Object> getInscriptionDetails() {
+    public final HashMap<String, Object> getInscriptionDetails() throws LuaException {
         ItemStack stack = be.getItemStack();
         if (stack == ItemStack.EMPTY) {
             return null;
+        }
+        Item item = stack.getItem();
+        if (!(item instanceof InscriptionItem)) {
+            throw new LuaException("Item is not an Inscription");
         }
         HashMap<String, Object> map = new HashMap<>();
         InscriptionData data = InscriptionData.from(stack);
@@ -514,15 +530,36 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
     }
 
     @LuaFunction
-    public final HashMap<String, Object> getTrinketDetails() {
+    public final HashMap<String, Object> getTrinketDetails() throws LuaException {
         ItemStack stack = be.getItemStack();
         if (stack == ItemStack.EMPTY) {
             return null;
         }
+        Item item = stack.getItem();
+        if (!(item instanceof TrinketItem)) {
+            throw new LuaException("Item is not a Trinket");
+        }
         HashMap<String, Object> map = new HashMap<>();
         map.put("Name", stack.getItem().getName(stack).getString());
-        map.put("Uses",TrinketItem.getUses(stack));
-        map.put("Slot",TrinketItem.getSlotIdentifier(stack).get());
+        map.put("Uses", TrinketItem.getUses(stack));
+        map.put("Slot", TrinketItem.getSlotIdentifier(stack).get());
+        return map;
+    }
+
+    @LuaFunction
+    public final HashMap<String, Object> getCatalystDetails() throws LuaException {
+        ItemStack stack = be.getItemStack();
+        if (stack == ItemStack.EMPTY) {
+            return null;
+        }
+        Item item = stack.getItem();
+        if (!(item instanceof InfusedCatalystItem)) {
+            throw new LuaException("Item is not a Infused Catalyst");
+        }
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("Size", InfusedCatalystItem.getSize(stack).get());
+        map.put("Modifiers",
+                InfusedCatalystItem.getModifiers(stack).stream().map(r -> r.toString()).collect(Collectors.toList()));
         return map;
     }
 
