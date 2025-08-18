@@ -6,9 +6,9 @@ import iskallia.vault.gear.attribute.VaultGearModifier.AffixCategorySet;
 import net.minecraft.resources.ResourceLocation;
 
 public class CCRandomGodVaultAttribute extends ValueAttribute<CCTemporalAttribute> {
-    public  CCRandomGodVaultAttribute(AffixCategorySet categories,ResourceLocation modifier, int count, int time) {
+    public CCRandomGodVaultAttribute(AffixCategorySet categories, ResourceLocation modifier, int count, int time) {
         super("Temporal Modifier", categories, new CCTemporalAttribute(modifier.toString(), count, time));
-   }
+    }
 
     @Override
     public HashMap<String, Object> toLuaTable() {

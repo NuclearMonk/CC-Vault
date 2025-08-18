@@ -199,9 +199,10 @@ public class CCVaultGearAttributeFactory {
 			Pair<Integer, Float> v = new Pair<>(((ManaPerLootAttribute) value).getManaGenerated(),
 					((ManaPerLootAttribute) value).getManaGenerationChance());
 			return new CCManaPerLootAttribute(modifier.getCategories(), v);
-		}else if (value instanceof RandomGodVaultModifierAttribute) {
+		} else if (value instanceof RandomGodVaultModifierAttribute) {
 			RandomGodVaultModifierAttribute temporal = (RandomGodVaultModifierAttribute) value;
-			return new CCRandomGodVaultAttribute(modifier.getCategories(), temporal.getModifier(),temporal.getCount(), temporal.getTime());
+			return new CCRandomGodVaultAttribute(modifier.getCategories(), temporal.getModifier(), temporal.getCount(),
+					temporal.getTime());
 		} else if (value instanceof Boolean) {
 			// Having a value for boolean modifiers makes no sense, they are either True, or
 			// arent there for us to read ever

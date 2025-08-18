@@ -8,7 +8,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -25,13 +24,10 @@ import iskallia.vault.gear.attribute.VaultGearModifier.AffixType;
 import iskallia.vault.gear.attribute.config.ConfigurableAttributeGenerator;
 import iskallia.vault.gear.data.VaultGearData;
 import iskallia.vault.gear.item.VaultGearItem;
-import iskallia.vault.gear.trinket.TrinketEffect;
-import iskallia.vault.gear.trinket.TrinketHelper.TrinketStack;
 import iskallia.vault.init.ModGearAttributes;
 import iskallia.vault.item.InfusedCatalystItem;
 import iskallia.vault.item.InscriptionItem;
 import iskallia.vault.item.data.InscriptionData;
-import iskallia.vault.item.gear.CharmItem;
 import iskallia.vault.item.gear.TrinketItem;
 import iskallia.vault.item.gear.VaultCharmItem;
 import iskallia.vault.item.tool.JewelItem;
@@ -541,7 +537,7 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         if (!(item instanceof TrinketItem)) {
             throw new LuaException("Item is not a Trinket");
         }
-        if (!TrinketItem.isIdentified(stack)){
+        if (!TrinketItem.isIdentified(stack)) {
             map.put("Identified", false);
             return map;
         }
@@ -568,6 +564,7 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
                 InfusedCatalystItem.getModifiers(stack).stream().map(r -> r.toString()).collect(Collectors.toList()));
         return map;
     }
+
     @LuaFunction
     public final HashMap<String, Object> getCharmDetails() throws LuaException {
         ItemStack stack = be.getItemStack();
@@ -602,6 +599,7 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
 
         return map;
     }
+
     @LuaFunction
     public final String getItemType() {
         // Returns the type of item in the vault reader slot, returns Unknown if its not
@@ -611,9 +609,9 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
             return null;
         }
         Item item = stack.getItem();
-        if(item instanceof VaultCharmItem){
+        if (item instanceof VaultCharmItem) {
             return "Charm";
-        }else if (item instanceof TrinketItem) {
+        } else if (item instanceof TrinketItem) {
             return "Trinket";
         } else if (item instanceof JewelItem) {
             return "Jewel";
@@ -625,7 +623,7 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
             return "Gear";
         } else if (item instanceof InfusedCatalystItem) {
             return "Catalyst";
-        } 
+        }
         return "Unknown";
     }
 }
