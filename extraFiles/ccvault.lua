@@ -15,6 +15,7 @@
 ---|"Tool"
 ---|"Gear"
 ---|"Catalyst"
+---|"Charm"
 ---|"Unknown"
 
 
@@ -80,9 +81,10 @@
 ---@field Suffixes (GearModifier|ValueModifier|RangedModifier)[]
 
 ---@class Trinket
----@field Uses integer
----@field Slot string
----@field Name string
+---@field Identified boolean
+---@field Uses? integer
+---@field Slot? string
+---@field Name? string
 
 ---@class Inscription
 ---@field Size integer
@@ -91,6 +93,13 @@
 ---@class Catalyst
 ---@field Size integer
 ---@field Modifiers string[]
+
+
+---@class Charm
+---@field Identified boolean
+---@field Uses? integer
+---@field God? string
+---@field Preffixes? ValueModifier[]
 
 ---@class vaultReader: inventory
 local reader = {}

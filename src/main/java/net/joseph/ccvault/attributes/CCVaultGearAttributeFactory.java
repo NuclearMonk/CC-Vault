@@ -14,6 +14,7 @@ import iskallia.vault.gear.attribute.ability.AbilityCooldownPercentAttribute;
 import iskallia.vault.gear.attribute.ability.AbilityLevelAttribute;
 import iskallia.vault.gear.attribute.ability.special.base.SpecialAbilityGearAttribute;
 import iskallia.vault.gear.attribute.config.IntegerAttributeGenerator;
+import iskallia.vault.gear.attribute.custom.RandomGodVaultModifierAttribute;
 import iskallia.vault.gear.attribute.custom.ability.AbilityTriggerOnDamageAttribute;
 import iskallia.vault.gear.attribute.custom.effect.EffectAvoidanceGearAttribute;
 import iskallia.vault.gear.attribute.custom.effect.EffectAvoidanceListGearAttribute;
@@ -24,6 +25,7 @@ import iskallia.vault.gear.attribute.custom.loot.ManaPerLootAttribute;
 import iskallia.vault.gear.data.VaultGearData;
 import iskallia.vault.init.ModDynamicModels;
 import iskallia.vault.init.ModGearAttributes;
+import iskallia.vault.item.gear.VaultCharmItem;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
@@ -39,6 +41,12 @@ public class CCVaultGearAttributeFactory {
 		// why of all places getRolledTier doesnt return a nullable value instead, is
 		// out of my non giga brain developer brain
 		if (modifier.getRolledTier() == -1) {
+			return parseDeterministicModifier(modifier);
+		}
+
+		// This is here because vault charm items break that convention for some
+		// forsaken reason
+		if (stack.getItem() instanceof VaultCharmItem && (modifier.getRolledTier() == 0)) {
 			return parseDeterministicModifier(modifier);
 		}
 		// while we are at it we can also get the tier, since tiers are 0 indexed in
@@ -129,7 +137,6 @@ public class CCVaultGearAttributeFactory {
 		return new DebugAttribute(map);
 	}
 
-
 	private static VaultGearTierConfig.ModifierConfigRange getModifierConfigForLevel(ItemStack stack,
 			VaultGearModifier<?> modifier, int level) {
 		VaultGearTierConfig.ModifierConfigRange configRange = (VaultGearTierConfig.ModifierConfigRange) VaultGearTierConfig
@@ -192,6 +199,9 @@ public class CCVaultGearAttributeFactory {
 			Pair<Integer, Float> v = new Pair<>(((ManaPerLootAttribute) value).getManaGenerated(),
 					((ManaPerLootAttribute) value).getManaGenerationChance());
 			return new CCManaPerLootAttribute(modifier.getCategories(), v);
+		}else if (value instanceof RandomGodVaultModifierAttribute) {
+			RandomGodVaultModifierAttribute temporal = (RandomGodVaultModifierAttribute) value;
+			return new CCRandomGodVaultAttribute(modifier.getCategories(), temporal.getModifier(),temporal.getCount(), temporal.getTime());
 		} else if (value instanceof Boolean) {
 			// Having a value for boolean modifiers makes no sense, they are either True, or
 			// arent there for us to read ever

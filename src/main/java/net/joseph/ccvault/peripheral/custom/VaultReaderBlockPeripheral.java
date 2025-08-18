@@ -33,6 +33,7 @@ import iskallia.vault.item.InscriptionItem;
 import iskallia.vault.item.data.InscriptionData;
 import iskallia.vault.item.gear.CharmItem;
 import iskallia.vault.item.gear.TrinketItem;
+import iskallia.vault.item.gear.VaultCharmItem;
 import iskallia.vault.item.tool.JewelItem;
 import iskallia.vault.item.tool.ToolItem;
 import net.joseph.ccvault.attributes.CCVaultGearAttributeFactory;
@@ -384,7 +385,6 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         }
         VaultGearData data = VaultGearData.read(stack);
         HashMap<String, Object> gear = new HashMap<>();
-
         gear.put("Level", data.getItemLevel());
         gear.put("Rarity", data.getRarity().getDisplayName().getString());
         gear.put("Name", stack.getDisplayName().getString());
@@ -408,7 +408,8 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
             case BOOTS:
                 gear.put("Slot", VaultGearItem.of(stack).getEquipmentSlot(stack).toString());
                 break;
-
+            case CHARM:
+                throw new LuaException("Gear Item is a Charm");
             default:
                 break;
         }
@@ -532,6 +533,7 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
     @LuaFunction
     public final HashMap<String, Object> getTrinketDetails() throws LuaException {
         ItemStack stack = be.getItemStack();
+        HashMap<String, Object> map = new HashMap<>();
         if (stack == ItemStack.EMPTY) {
             return null;
         }
@@ -539,7 +541,11 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         if (!(item instanceof TrinketItem)) {
             throw new LuaException("Item is not a Trinket");
         }
-        HashMap<String, Object> map = new HashMap<>();
+        if (!TrinketItem.isIdentified(stack)){
+            map.put("Identified", false);
+            return map;
+        }
+        map.put("Identified", true);
         map.put("Name", stack.getItem().getName(stack).getString());
         map.put("Uses", TrinketItem.getUses(stack));
         map.put("Slot", TrinketItem.getSlotIdentifier(stack).get());
@@ -562,7 +568,40 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
                 InfusedCatalystItem.getModifiers(stack).stream().map(r -> r.toString()).collect(Collectors.toList()));
         return map;
     }
+    @LuaFunction
+    public final HashMap<String, Object> getCharmDetails() throws LuaException {
+        ItemStack stack = be.getItemStack();
+        HashMap<String, Object> map = new HashMap<>();
 
+        if (stack == ItemStack.EMPTY) {
+            return null;
+        }
+        Item item = stack.getItem();
+        if (!(item instanceof VaultCharmItem)) {
+            throw new LuaException("Item is not a Charm");
+        }
+        VaultGearData data = VaultGearData.read(stack);
+        // Return early in case the gear isn't identified as there is no more data to be
+        // read
+        switch (data.getState()) {
+            case UNIDENTIFIED:
+            case ROLLING:
+                map.put("Identified", false);
+                return map;
+            default:
+                map.put("Identified", true);
+                break;
+        }
+        map.put("Uses", VaultCharmItem.getUses(stack));
+        map.put("God", VaultCharmItem.getGod(stack).get().getName());
+        map.put("Rarity", data.getRarity().getDisplayName().getString());
+        List<HashMap<String, Object>> prefixes = data.getModifiers(AffixType.PREFIX).stream()
+                .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
+                .collect(Collectors.toList());
+        map.put("Prefixes", prefixes);
+
+        return map;
+    }
     @LuaFunction
     public final String getItemType() {
         // Returns the type of item in the vault reader slot, returns Unknown if its not
@@ -572,7 +611,9 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
             return null;
         }
         Item item = stack.getItem();
-        if (item instanceof TrinketItem) {
+        if(item instanceof VaultCharmItem){
+            return "Charm";
+        }else if (item instanceof TrinketItem) {
             return "Trinket";
         } else if (item instanceof JewelItem) {
             return "Jewel";
@@ -584,7 +625,7 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
             return "Gear";
         } else if (item instanceof InfusedCatalystItem) {
             return "Catalyst";
-        }
+        } 
         return "Unknown";
     }
 }

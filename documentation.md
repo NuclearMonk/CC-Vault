@@ -139,9 +139,11 @@ Identified Gear Has all the fields of [UnidientifiedGear](#unidentifiedgear) plu
 - Suffixes ([GearModifier](#gearmodifier)|[ValueModifier](#valuemodifier)|[RangedModifier](#rangedmodifier))[]
 
 ##  Trinket
-- Name `string` The name of the Trinket
-- Uses `integer` The number of uses left in the trinket
-- Slot `string` The slot the trinket uses
+Optional fields are populated only if the trinket is identified
+- Identified `boolean` Is the trinket Identified
+- Name `?string` optional,The name of the Trinket
+- Uses `?integer` optional,The number of uses left in the trinket
+- Slot `?string` optional, The slot the trinket uses
 
 ##  Inscription
 - Size `integer` The size of the Inscription
@@ -150,3 +152,10 @@ Identified Gear Has all the fields of [UnidientifiedGear](#unidentifiedgear) plu
 ##  Catalyst
 - Size `integer` The size of the Catalyst
 - Modifiers `string[]` The resource Locations of the added vault effects eg: "the_vault:challenger_stack"
+
+##  charm
+Optional fields are populated only if the charm is identified
+- Identified `boolean` Is the charm Identified
+- God `?string` optional,The God associated with the charm
+- Uses `?integer` optional,The number of uses left in the charm
+- Preffixes ?[ValueModifier](#valuemodifier)[] optional, The Preffixes on the Charm
