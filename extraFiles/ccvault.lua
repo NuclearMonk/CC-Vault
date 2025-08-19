@@ -50,7 +50,7 @@
 ---@field Level integer The Jewel Level
 ---@field Rarity Rarity The Jewels Rarity
 ---@field Implicits (GearModifier|ValueModifier|RangedModifier)[]
----@field Preffixes (GearModifier|ValueModifier|RangedModifier)[]
+---@field Prefixes (GearModifier|ValueModifier|RangedModifier)[]
 ---@field Suffixes (GearModifier|ValueModifier|RangedModifier)[]
 
 ---@class Tool
@@ -61,7 +61,7 @@
 ---@field RepairSlots RepairSlots
 ---@field Durability Durability
 ---@field Implicits (GearModifier|ValueModifier)[]
----@field Preffixes (GearModifier|ValueModifier)[]
+---@field Prefixes (GearModifier|ValueModifier)[]
 ---@field Suffixes (GearModifier|ValueModifier)[]
 
 ---@class UnidentifiedGear
@@ -77,7 +77,7 @@
 ---@field Durability Durability
 ---@field Attributes (GearModifier|ValueModifier|RangedModifier)[]
 ---@field Implicits (GearModifier|ValueModifier|RangedModifier)[]
----@field Preffixes (GearModifier|ValueModifier|RangedModifier)[]
+---@field Prefixes (GearModifier|ValueModifier|RangedModifier)[]
 ---@field Suffixes (GearModifier|ValueModifier|RangedModifier)[]
 
 ---@class Trinket
@@ -99,9 +99,9 @@
 ---@field Identified boolean
 ---@field Uses? integer
 ---@field God? string
----@field Preffixes? ValueModifier[]
+---@field Prefixes? ValueModifier[]
 
----@class vaultReader: inventory
+---@class vaultReader: ccTweaked.peripheral.Inventory
 local reader = {}
 
 ---@return integer level level of the item inside the reader
