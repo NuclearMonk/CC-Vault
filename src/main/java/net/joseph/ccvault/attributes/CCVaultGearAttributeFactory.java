@@ -59,7 +59,7 @@ public class CCVaultGearAttributeFactory {
 				data.getItemLevel());
 		try {
 			if (value instanceof Boolean) {
-				return new CCVaultGearAttribute(name, modifier.getCategories());
+				return new ValueAttribute<Boolean>(name, modifier.getCategories(), (Boolean) value);
 			} else if (value instanceof Integer) {
 				return new RangedValueAttribute<Integer>(name,
 						modifier.getCategories(),
@@ -203,14 +203,7 @@ public class CCVaultGearAttributeFactory {
 			RandomGodVaultModifierAttribute temporal = (RandomGodVaultModifierAttribute) value;
 			return new CCRandomGodVaultAttribute(modifier.getCategories(), temporal.getModifier(), temporal.getCount(),
 					temporal.getTime());
-		} else if (value instanceof Boolean) {
-			// Having a value for boolean modifiers makes no sense, they are either True, or
-			// arent there for us to read ever
-			// So to avoid obviously duplicated data we just return the fact they exist
-			return new CCVaultGearAttribute(modifier.getAttribute().getReader().getModifierName(),
-					modifier.getCategories());
 		}
-		// Other types we put them in a generic value attribute
 		return new ValueAttribute(modifier.getAttribute().getReader().getModifierName(),
 				new AffixCategorySet(),
 				value);
