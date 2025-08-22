@@ -47,8 +47,11 @@ public class CCAbilityTriggerOnDamageAttribute extends RangedValueAttribute<Pair
         HashMap<String, Object> map = super.toLuaTable();
         map.put("ability", ability);
         map.put("value", toLuaTable(value));
-        map.put("min", toLuaTable(value));
-        map.put("max", toLuaTable(value));
+        HashMap<String, Object> roll = new HashMap<>();
+        roll.put("tier", this.tier);
+        roll.put("min", toLuaTable(this.min));
+        roll.put("max", toLuaTable(this.max));
+        map.put("roll", roll);
         return map;
     }
 }

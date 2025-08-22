@@ -14,9 +14,9 @@ public class CCRandomGodVaultAttribute extends ValueAttribute<CCTemporalAttribut
     public HashMap<String, Object> toLuaTable() {
         var map = super.toLuaTable();
         HashMap<String, Object> v = new HashMap<>();
-        v.put("Effect", this.value.modifier);
-        v.put("Count", this.value.count);
-        v.put("Time", this.value.time);
+        v.put("effect", this.value.modifier);
+        v.put("count", this.value.count);
+        v.put("time", this.value.time);
         map.put("value", v);
         return map;
     }

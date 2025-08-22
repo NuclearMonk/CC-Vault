@@ -19,8 +19,8 @@ public class CCManaPerLootAttribute extends ValueAttribute<Pair<Integer, Float>>
     
     public HashMap<String, Object> toLuaTable(Pair<Integer, Float> value) {
         HashMap<String, Object> map = new HashMap<>();
-        map.put("Mana", value.getFirst());
-        map.put("Chance", value.getSecond());
+        map.put("mana", value.getFirst());
+        map.put("chance", value.getSecond());
         return map;
     }
 

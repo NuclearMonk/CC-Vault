@@ -349,22 +349,22 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         }
         VaultGearData data = VaultGearData.read(stack);
         HashMap<String, Object> jewel = new HashMap<>();
-        jewel.put("Name", stack.getDisplayName().getString());
-        jewel.put("Type", "Jewel");
-        jewel.put("Level", data.getItemLevel());
-        jewel.put("Rarity", data.getRarity().getDisplayName().getString());
+        jewel.put("name", stack.getDisplayName().getString());
+        jewel.put("type", "Jewel");
+        jewel.put("level", data.getItemLevel());
+        jewel.put("rarity", data.getRarity().getDisplayName().getString());
         List<HashMap<String, Object>> implicits = data.getModifiers(AffixType.IMPLICIT).stream()
                 .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
                 .collect(Collectors.toList());
-        jewel.put("Implicits", implicits);
+        jewel.put("implicits", implicits);
         List<HashMap<String, Object>> prefixes = data.getModifiers(AffixType.PREFIX).stream()
                 .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
                 .collect(Collectors.toList());
-        jewel.put("Prefixes", prefixes);
+        jewel.put("prefixes", prefixes);
         List<HashMap<String, Object>> suffixes = data.getModifiers(AffixType.SUFFIX).stream()
                 .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
                 .collect(Collectors.toList());
-        jewel.put("Suffixes", suffixes);
+        jewel.put("suffixes", suffixes);
         return jewel;
 
     }
@@ -381,19 +381,19 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         }
         VaultGearData data = VaultGearData.read(stack);
         HashMap<String, Object> gear = new HashMap<>();
-        gear.put("Level", data.getItemLevel());
-        gear.put("Rarity", data.getRarity().getDisplayName().getString());
-        gear.put("Name", stack.getDisplayName().getString());
-        gear.put("Type", "Gear");
+        gear.put("level", data.getItemLevel());
+        gear.put("rarity", data.getRarity().getDisplayName().getString());
+        gear.put("name", stack.getDisplayName().getString());
+        gear.put("type", "Gear");
         // Return early in case the gear isn't identified as there is no more data to be
         // read
         switch (data.getState()) {
             case UNIDENTIFIED:
             case ROLLING:
-                gear.put("Identified", false);
+                gear.put("identified", false);
                 return gear;
             default:
-                gear.put("Identified", true);
+                gear.put("identified", true);
 
                 break;
         }
@@ -402,7 +402,7 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
             case CHESTPLATE:
             case LEGGINGS:
             case BOOTS:
-                gear.put("Slot", VaultGearItem.of(stack).getEquipmentSlot(stack).toString());
+                gear.put("slot", VaultGearItem.of(stack).getEquipmentSlot(stack).toString());
                 break;
             case CHARM:
                 throw new LuaException("Gear Item is a Charm");
@@ -410,12 +410,12 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
                 break;
         }
         if (data.getRarity() != VaultGearRarity.UNIQUE) {
-            gear.put("PrefixSlots", data.getFirstValue(ModGearAttributes.PREFIXES).get());
-            gear.put("SuffixSlots", data.getFirstValue(ModGearAttributes.SUFFIXES).get());
-            gear.put("CraftingPotential", getCraftingPotential(data));
+            gear.put("prefixSlots", data.getFirstValue(ModGearAttributes.PREFIXES).get());
+            gear.put("suffixSlots", data.getFirstValue(ModGearAttributes.SUFFIXES).get());
+            gear.put("craftingPotential", getCraftingPotential(data));
         }
-        gear.put("RepairSlots", getRepairslots(data));
-        gear.put("Durability", getDurability(stack));
+        gear.put("repairSlots", getRepairslots(data));
+        gear.put("durability", getDurability(stack));
 
         List<HashMap<String, Object>> attributes = new ArrayList<HashMap<String, Object>>();
         data.getAttributes().forEach(instance -> {
@@ -435,20 +435,20 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
                 attributes.add(CCVaultGearAttributeFactory.parse(stack, instance, data).toLuaTable());
             }
         });
-        gear.put("Attributes", attributes);
+        gear.put("attributes", attributes);
         List<HashMap<String, Object>> implicits = data.getModifiers(AffixType.IMPLICIT).stream()
                 .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
                 .collect(Collectors.toList());
-        gear.put("Implicits", implicits);
+        gear.put("implicits", implicits);
         List<HashMap<String, Object>> prefixes = data.getModifiers(AffixType.PREFIX).stream()
                 .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
                 .collect(Collectors.toList());
-        gear.put("Prefixes", prefixes);
+        gear.put("prefixes", prefixes);
         List<HashMap<String, Object>> suffixes = data.getModifiers(AffixType.SUFFIX).stream()
                 .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
                 .collect(Collectors.toList());
 
-        gear.put("Suffixes", suffixes);
+        gear.put("suffixes", suffixes);
         return gear;
 
     }
@@ -465,20 +465,20 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         }
         VaultGearData data = VaultGearData.read(stack);
         HashMap<String, Object> tool = new HashMap<>();
-        tool.put("Name", stack.getDisplayName().getString());
-        tool.put("Type", "Tool");
-        tool.put("Level", data.getItemLevel());
-        tool.put("Rarity", data.getRarity().getDisplayName().getString());
-        tool.put("RepairSlots", getRepairslots(data));
-        tool.put("Durability", getDurability(stack));
+        tool.put("name", stack.getDisplayName().getString());
+        tool.put("type", "Tool");
+        tool.put("level", data.getItemLevel());
+        tool.put("rarity", data.getRarity().getDisplayName().getString());
+        tool.put("repairSlots", getRepairslots(data));
+        tool.put("durability", getDurability(stack));
         List<HashMap<String, Object>> prefixes = data.getModifiers(AffixType.PREFIX).stream()
                 .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
                 .collect(Collectors.toList());
-        tool.put("Prefixes", prefixes);
+        tool.put("prefixes", prefixes);
         List<HashMap<String, Object>> suffixes = data.getModifiers(AffixType.SUFFIX).stream()
                 .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
                 .collect(Collectors.toList());
-        tool.put("Suffixes", suffixes);
+        tool.put("suffixes", suffixes);
         return tool;
 
     }
@@ -486,9 +486,9 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
     private HashMap<String, Integer> getDurability(ItemStack stack) {
         HashMap<String, Integer> durability = new HashMap<>();
         int maxDurability = VaultGearItem.of(stack).getMaxDamage(stack);
-        durability.put("Total", maxDurability);
+        durability.put("total", maxDurability);
         int current_durability = maxDurability - VaultGearItem.of(stack).getDamage(stack);
-        durability.put("Current", current_durability);
+        durability.put("current", current_durability);
         return durability;
     }
 
@@ -496,15 +496,15 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         HashMap<String, Integer> craft_potential = new HashMap<>();
         int potential = data.getFirstValue(ModGearAttributes.CRAFTING_POTENTIAL).get();
         int max_potential = data.getFirstValue(ModGearAttributes.MAX_CRAFTING_POTENTIAL).get();
-        craft_potential.put("Max", max_potential);
-        craft_potential.put("Current", potential);
+        craft_potential.put("max", max_potential);
+        craft_potential.put("current", potential);
         return craft_potential;
     }
 
     private HashMap<String, Integer> getRepairslots(VaultGearData data) {
         HashMap<String, Integer> repair_slots = new HashMap<>();
-        repair_slots.put("Total", data.getRepairSlots());
-        repair_slots.put("Used", data.getUsedRepairSlots());
+        repair_slots.put("total", data.getRepairSlots());
+        repair_slots.put("used", data.getUsedRepairSlots());
         return repair_slots;
     }
 
@@ -520,8 +520,8 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         }
         HashMap<String, Object> map = new HashMap<>();
         InscriptionData data = InscriptionData.from(stack);
-        map.put("Size", data.getSize());
-        map.put("Rooms", data.getEntries().stream().map(r -> r.toRoomEntry().getName().getString())
+        map.put("size", data.getSize());
+        map.put("rooms", data.getEntries().stream().map(r -> r.toRoomEntry().getName().getString())
                 .collect(Collectors.toList()));
         return map;
     }
@@ -538,13 +538,13 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
             throw new LuaException("Item is not a Trinket");
         }
         if (!TrinketItem.isIdentified(stack)) {
-            map.put("Identified", false);
+            map.put("identified", false);
             return map;
         }
-        map.put("Identified", true);
-        map.put("Name", stack.getItem().getName(stack).getString());
-        map.put("Uses", TrinketItem.getUses(stack));
-        map.put("Slot", TrinketItem.getSlotIdentifier(stack).get());
+        map.put("identified", true);
+        map.put("name", stack.getItem().getName(stack).getString());
+        map.put("uses", TrinketItem.getUses(stack));
+        map.put("slot", TrinketItem.getSlotIdentifier(stack).get());
         return map;
     }
 
@@ -559,8 +559,8 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
             throw new LuaException("Item is not a Infused Catalyst");
         }
         HashMap<String, Object> map = new HashMap<>();
-        map.put("Size", InfusedCatalystItem.getSize(stack).get());
-        map.put("Modifiers",
+        map.put("size", InfusedCatalystItem.getSize(stack).get());
+        map.put("modifiers",
                 InfusedCatalystItem.getModifiers(stack).stream().map(r -> r.toString()).collect(Collectors.toList()));
         return map;
     }
@@ -583,19 +583,19 @@ public class VaultReaderBlockPeripheral extends TweakedPeripheral<VaultReaderBlo
         switch (data.getState()) {
             case UNIDENTIFIED:
             case ROLLING:
-                map.put("Identified", false);
+                map.put("identified", false);
                 return map;
             default:
-                map.put("Identified", true);
+                map.put("identified", true);
                 break;
         }
-        map.put("Uses", VaultCharmItem.getUses(stack));
-        map.put("God", VaultCharmItem.getGod(stack).get().getName());
-        map.put("Rarity", data.getRarity().getDisplayName().getString());
+        map.put("uses", VaultCharmItem.getUses(stack));
+        map.put("god", VaultCharmItem.getGod(stack).get().getName());
+        map.put("rarity", data.getRarity().getDisplayName().getString());
         List<HashMap<String, Object>> prefixes = data.getModifiers(AffixType.PREFIX).stream()
                 .map(modifier -> CCVaultGearAttributeFactory.parse(stack, modifier).toLuaTable())
                 .collect(Collectors.toList());
-        map.put("Prefixes", prefixes);
+        map.put("prefixes", prefixes);
 
         return map;
     }

@@ -11,11 +11,4 @@ public class TieredValueAttribute<T> extends ValueAttribute<T> {
         super(name, categories, value);
         this.tier = tier;
     }
-
-    @Override
-    public HashMap<String, Object> toLuaTable() {
-        var map = super.toLuaTable();
-        map.put("tier", this.tier);
-        return map;
-    }
 }

@@ -27,8 +27,11 @@ public class RangedValueAttribute<T> extends TieredValueAttribute<T> {
     @Override
     public HashMap<String, Object> toLuaTable() {
         HashMap<String, Object> map = super.toLuaTable();
-        map.put("min", this.min);
-        map.put("max", this.max);
+        HashMap<String, Object> roll = new HashMap<>();
+        roll.put("tier", this.tier);
+        roll.put("min", this.min);
+        roll.put("max", this.max);
+        map.put("roll", roll);
         return map;
     }
 }
