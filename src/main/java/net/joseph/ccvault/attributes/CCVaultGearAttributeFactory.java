@@ -169,7 +169,7 @@ public class CCVaultGearAttributeFactory {
 			return new ValueAttribute<Integer>("Suffixes", new AffixCategorySet(),
 					(Integer) instance.getValue());
 		} else if (instance.getAttribute().equals(ModGearAttributes.IS_LEGENDARY)) {
-			return new CCVaultGearAttribute("Legendary", new AffixCategorySet());
+			return new ValueAttribute<Boolean>("Legendary", new AffixCategorySet(), true);
 		} else if (instance.getAttribute().equals(ModGearAttributes.UNIQUE_ITEM_KEY)) {
 			return new ValueAttribute<String>("Unique Key", new AffixCategorySet(),
 					((ResourceLocation) instance.getValue()).toString());
