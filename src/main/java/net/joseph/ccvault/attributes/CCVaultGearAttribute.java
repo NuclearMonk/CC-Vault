@@ -21,7 +21,7 @@ public class CCVaultGearAttribute implements ILuaTable{
         HashMap<String, Object> map = new HashMap<String, Object>();
         map.put("name", this.name);
         this.categories.stream().forEach(c->{
-            map.put(c.getTooltipDescriptor(), true);
+            map.put(c.getTooltipDescriptor().toLowerCase(), true);
         });
         return map;
     }

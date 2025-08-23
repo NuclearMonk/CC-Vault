@@ -19,87 +19,87 @@
 ---|"Unknown"
 
 
----@class GearModifier
+---@class Modifier
 ---@field name string
----@field Legendary? boolean
----@field Crafted? boolean
----@field Unusual? boolean
----@field Greater? boolean
----@field Frozen? boolean
+---@field value string |  number | boolean
+---@field legendary? boolean
+---@field crafted? boolean
+---@field unusual? boolean
+---@field greater? boolean
+---@field frozen? boolean
 
----@class ValueModifier : GearModifier
----@field value string | integer | number
+---@class RolledModifier : Modifier
+---@field roll Roll
 
-
----@class RangedModifier : ValueModifier
+---@class Roll
 ---@field tier  integer
----@field min  integer | number
----@field max  integer | number
+---@field min  number
+---@field max  number
 
 ---@class RepairSlots
----@field Total integer Total Repair Slots
----@field Used integer Slots Already Used Up
+---@field total integer Total Repair Slots
+---@field used integer Slots Already Used Up
 
 ---@class Durability
----@field Total integer Total Durability
----@field Current integer Current Durability
+---@field total integer Total Durability
+---@field current integer Current Durability
 
 ---@class Jewel
----@field Name string the name of the item
----@field Type "Jewel"
----@field Level integer The Jewel Level
----@field Rarity Rarity The Jewels Rarity
----@field Implicits (GearModifier|ValueModifier|RangedModifier)[]
----@field Prefixes (GearModifier|ValueModifier|RangedModifier)[]
----@field Suffixes (GearModifier|ValueModifier|RangedModifier)[]
+---@field name string the name of the item
+---@field type "Jewel"
+---@field level integer The Jewel Level
+---@field rarity Rarity The Jewels Rarity
+---@field implicits (Modifier|RolledModifier)[]
+---@field prefixes (Modifier|RolledModifier)[]
+---@field suffixes (Modifier|RolledModifier)[]
 
 ---@class Tool
----@field Name string the name of the item
----@field Type "Tool"
----@field Level integer The Tool Level
----@field Rarity Rarity The Tool Rarity
----@field RepairSlots RepairSlots
----@field Durability Durability
----@field Implicits (GearModifier|ValueModifier)[]
----@field Prefixes (GearModifier|ValueModifier)[]
----@field Suffixes (GearModifier|ValueModifier)[]
+---@field name string the name of the item
+---@field type "Tool"
+---@field level integer The Tool Level
+---@field rarity Rarity The Tool Rarity
+---@field repairslots RepairSlots
+---@field durability Durability
+---@field implicits (Modifier)[]
+---@field prefixes (Modifier)[]
+---@field suffixes (Modifier)[]
 
 ---@class UnidentifiedGear
----@field Name string the name of the item
----@field Type "Gear"
----@field Level integer The Tool Level
----@field Rarity Rarity The Tool Rarity
----@field Identified false Is The gear Identified
+---@field name string the name of the item
+---@field type "Gear"
+---@field level integer The Tool Level
+---@field rarity Rarity The Tool Rarity
+---@field identified false Is The gear Identified
 
 ---@class Gear : UnidentifiedGear
----@field Identified true
----@field RepairSlots RepairSlots
----@field Durability Durability
----@field Attributes (GearModifier|ValueModifier|RangedModifier)[]
----@field Implicits (GearModifier|ValueModifier|RangedModifier)[]
----@field Prefixes (GearModifier|ValueModifier|RangedModifier)[]
----@field Suffixes (GearModifier|ValueModifier|RangedModifier)[]
+---@field identified true
+---@field repairslots RepairSlots
+---@field durability Durability
+---@field attributes (Modifier|RolledModifier)[]
+---@field implicits (Modifier|RolledModifier)[]
+---@field prefixes (Modifier|RolledModifier)[]
+---@field suffixes (Modifier|RolledModifier)[]
 
 ---@class Trinket
----@field Identified boolean
----@field Uses? integer
----@field Slot? string
----@field Name? string
+---@field identified boolean
+---@field uses? integer
+---@field slot? string
+---@field name? string
 
 ---@class Inscription
----@field Size integer
----@field Rooms string[]
+---@field size integer
+---@field rooms string[]
 
 ---@class Catalyst
----@field Size integer
----@field Modifiers string[]
+---@field size integer
+---@field modifiers string[]
 
 
 ---@class Charm
----@field Identified boolean
----@field Uses? integer
----@field God? string
----@field Prefixes? ValueModifier[]
+---@field identified boolean
+---@field uses? integer
+---@field god? string
+---@field prefixes? Modifier[]
 
 ---@class vaultReader: ccTweaked.peripheral.Inventory
 local reader = {}
@@ -125,15 +125,13 @@ function reader.getPrefixCount() end
 ---@return integer count the amount of suffix slots the item has (including empty ones)
 function reader.getSuffixCount() end
 
----@class modifierString: string
-
----@return (GearModifier|ValueModifier|RangedModifier)[]
+---@return (Modifier|RolledModifier)[]
 function reader.getImplicits(index) end
 
----@return (GearModifier|ValueModifier|RangedModifier)[]
+---@return (Modifier|RolledModifier)[]
 function reader.getPrefixes() end
 
----@return (GearModifier|ValueModifier|RangedModifier)[]
+---@return (Modifier|RolledModifier)[]
 function reader.getSuffixes() end
 
 ---@return ItemTypes |

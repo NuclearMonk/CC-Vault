@@ -63,18 +63,71 @@ Gets the details of a Trinket in the reader
 `nil` if the slot is empty
 #### throws
 - if the Item is not an Trinket
+
+
+---
+`reader.getItemLevel()`
+#### returns
+- integer the items level
+
+---
+`reader.getRarity()`
+ #### returns
+- Rarity rarity the item rarity in full caps:
+
+---
+`reader.getRepairSlots()`
+ #### returns
+- integer slots max repair slots of the item
+
+---
+`reader.getUsedRepairSlots()`
+ #### returns
+- integer slots the amount of repair slots that have been used on the item
+
+---
+`reader.getImplicitCount()`
+ #### returns
+- integer count the amount of implicit slots the item has
+
+---
+`reader.getPrefixCount()`
+ #### returns
+- integer count the amount of prefix slots the item has (including empty ones)
+
+---
+`reader.getSuffixCount()`
+ #### returns
+- integer count the amount of suffix slots the item has (including empty ones)
+
+---
+`reader.getImplicits(index)`
+ #### returns
+- (Modifier|RolledModifier)[]
+
+---
+`reader.getPrefixes()`
+ #### returns
+- (Modifier|RolledModifier)[]
+
+---
+`reader.getSuffixes()`
+ #### returns
+- (Modifier|RolledModifier)[]
+
+
 # Types
 --- 
 ## Tool
-- Name `string` the name of the item
-- Type `"Tool"`
-- Level `integer` The Tool Level
-- Rarity [Rarity](#rarity) The Tool Rarity
-- RepairSlots [RepairSlots](#repairslots)
-- Durability [Durability](#durability)
-- Implicits ([GearModifier](#gearmodifier)|[ValueModifier](#valuemodifier))[]
-- Preffixes ([GearModifier](#gearmodifier)|[ValueModifier](#valuemodifier))[]
-- Suffixes ([GearModifier](#gearmodifier)|[ValueModifier](#valuemodifier))[]
+- name `string` the name of the item
+- type `"Tool"`
+- level `integer` The Tool Level
+- rarity [Rarity](#rarity) The Tool Rarity
+- repairslots [RepairSlots](#repairslots)
+- durability [Durability](#durability)
+- implicits ([Modifier](#modifier))[]
+- preffixes ([Modifier](#modifier))[]
+- suffixes ([Modifier](#modifier))[]
 ---
 ## Rarity
 `string` one of the following values
@@ -85,77 +138,74 @@ Gets the details of a Trinket in the reader
 - OMEGA
 ---
 ## RepairSlots
-- Total `integer` Total Repair Slots
-- Used `integer` Slots Already Used Up
+- total `integer` Total Repair Slots
+- used `integer` Slots Already Used Up
 ---
 ## Durability
-- Total `integer` Total Durability
-- Current `integer` Current Durability
+- total `integer` Total Durability
+- current `integer` Current Durability
 ---
-## GearModifier
+## Modifier
 - name `string` The modifier name
-Legendary `?boolean` optional, the Modifier is legendary
-Crafted `?boolean` optional, the Modifier is crafted
-Unusual `?boolean` optional, the Modifier is unusual
-Greater `?boolean` optional, the Modifier is greated
-Frozen `?boolean` optional, the Modifier is frozen
----
-## ValueModifier
-Extends [GearModifier](#gearmodifier) so it has all its field plus
 - value `string | integer | number` The value of the modifier
+- legendary `?boolean` optional, the Modifier is legendary
+- crafted `?boolean` optional, the Modifier is crafted
+- unusual `?boolean` optional, the Modifier is unusual
+- greater `?boolean` optional, the Modifier is greated
+- frozen `?boolean` optional, the Modifier is frozen
 ---
-## RangedModifier 
-Extends [GearModifier](#valuemodifier) so it has all its field plus
+## RolledModifier 
+Extends [Modifier](#modifier) for modifiers that have some form of roll information
 -  tier `integer` The rolled Tier
 -  min `number` The maximum possible roll for the modifier
 -  max `number` The minimum possible roll for the modifier
 ---
 ## Jewel
-- Name `string` the name of the item
-- Type `"Jewel"`
-- Level `integer` The Jewel Level
-- Rarity [Rarity](#rarity) The Jewel's Rarity
-- Implicits ([GearModifier](#gearmodifier)|[ValueModifier](#valuemodifier)|[RangedModifier](#rangedmodifier))[]
-- Preffixes ([GearModifier](#gearmodifier)|[ValueModifier](#valuemodifier)|[RangedModifier](#rangedmodifier))[]
-- Suffixes ([GearModifier](#gearmodifier)|[ValueModifier](#valuemodifier)|[RangedModifier](#rangedmodifier))[]
+- name `string` the name of the item
+- type `"Jewel"`
+- level `integer` The Jewel Level
+- rarity [Rarity](#rarity) The Jewel's Rarity
+- implicits ([Modifier](#modifier)|[RolledModifier](#rolledmodifier))[]
+- preffixes ([Modifier](#modifier)|[RolledModifier](#rolledmodifier))[]
+- suffixes ([Modifier](#modifier)|[RolledModifier](#rolledmodifier))[]
 ---
 
 ## UnidentifiedGear
-- Name `string` the name of the item
-- Type `"Gear"`
-- Level `integer` The Tool Level
-- Rarity [Rarity](#rarity) The Gear's Rarity
-- Identified `false` Is The gear Identified
+- name `string` the name of the item
+- type `"Gear"`
+- level `integer` The Tool Level
+- rarity [Rarity](#rarity) The Gear's Rarity
+- identified `false` Is The gear Identified
 --- 
 
 ## Gear 
 Identified Gear Has all the fields of [UnidientifiedGear](#unidentifiedgear) plus the following
-- Identified `true` overrides the one set by [UnidientifiedGear](#unidentifiedgear)
-- RepairSlots [RepairSlots](#repairslots)
-- Durability [Durability](#durability)
-- Attributes ([GearModifier](#gearmodifier)|[ValueModifier](#valuemodifier)|[RangedModifier](#rangedmodifier))[]
-- Implicits ([GearModifier](#gearmodifier)|[ValueModifier](#valuemodifier)|[RangedModifier](#rangedmodifier))[]
-- Preffixes ([GearModifier](#gearmodifier)|[ValueModifier](#valuemodifier)|[RangedModifier](#rangedmodifier))[]
-- Suffixes ([GearModifier](#gearmodifier)|[ValueModifier](#valuemodifier)|[RangedModifier](#rangedmodifier))[]
+- identified `true` overrides the one set by [UnidientifiedGear](#unidentifiedgear)
+- repairslots [RepairSlots](#repairslots)
+- durability [Durability](#durability)
+- attributes ([Modifier](#modifier)|[RolledModifier](#rolledmodifier))[]
+- implicits ([Modifier](#modifier)|[RolledModifier](#rolledmodifier))[]
+- preffixes ([Modifier](#modifier)|[RolledModifier](#rolledmodifier))[]
+- suffixes ([Modifier](#modifier)|[RolledModifier](#rolledmodifier))[]
 
 ##  Trinket
 Optional fields are populated only if the trinket is identified
-- Identified `boolean` Is the trinket Identified
-- Name `?string` optional,The name of the Trinket
-- Uses `?integer` optional,The number of uses left in the trinket
-- Slot `?string` optional, The slot the trinket uses
+- identified `boolean` Is the trinket Identified
+- name `?string` optional,The name of the Trinket
+- uses `?integer` optional,The number of uses left in the trinket
+- slot `?string` optional, The slot the trinket uses
 
 ##  Inscription
-- Size `integer` The size of the Inscription
-- Rooms `string[]` The names of the rooms the Inscription adds
+- size `integer` The size of the Inscription
+- rooms `string[]` The names of the rooms the Inscription adds
 
 ##  Catalyst
-- Size `integer` The size of the Catalyst
-- Modifiers `string[]` The resource Locations of the added vault effects eg: "the_vault:challenger_stack"
+- size `integer` The size of the Catalyst
+- modifiers `string[]` The resource Locations of the added vault effects eg: "the_vault:challenger_stack"
 
-##  charm
+##  Charm
 Optional fields are populated only if the charm is identified
-- Identified `boolean` Is the charm Identified
-- God `?string` optional,The God associated with the charm
-- Uses `?integer` optional,The number of uses left in the charm
-- Preffixes ?[ValueModifier](#valuemodifier)[] optional, The Preffixes on the Charm
+- identified `boolean` Is the charm Identified
+- god `?string` optional,The God associated with the charm
+- uses `?integer` optional,The number of uses left in the charm
+- preffixes ?[Modifier](#modifier)[] optional, The Preffixes on the Charm
