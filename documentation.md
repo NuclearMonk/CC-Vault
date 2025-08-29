@@ -283,3 +283,33 @@ end
 ```
 ```
 ```
+
+if for example one wants to check if a modifier is legendary one can do
+`if mod.legendary then do_thing() end`
+
+
+
+```lua
+
+--- Example on getting the max a each suffix could have rolled
+local function getMaxRolls()
+	---@type vaultReader
+	local reader = peripheral.find("vaultreader")
+
+	local suffixes = {}
+	if reader.getItemType() == "Gear" then
+		local details = reader.getGearDetails()
+		if details ~= nil and details.identified == true then
+			for _, mod in ipairs(details.suffix) do
+				if mod.roll then
+					suffixes[mod.name] = mod.roll.max
+				end
+			end
+			return suffixes
+		end
+		return nil
+	end
+end
+```
+```
+```
