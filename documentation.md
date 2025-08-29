@@ -126,7 +126,7 @@ Gets the details of a Trinket in the reader
 - repairslots [RepairSlots](#repairslots)
 - durability [Durability](#durability)
 - implicits ([Modifier](#modifier))[]
-- preffixes ([Modifier](#modifier))[]
+- prefixes ([Modifier](#modifier))[]
 - suffixes ([Modifier](#modifier))[]
 ---
 ## Rarity
@@ -166,7 +166,7 @@ Extends [Modifier](#modifier) for modifiers that have some form of roll informat
 - level `integer` The Jewel Level
 - rarity [Rarity](#rarity) The Jewel's Rarity
 - implicits ([Modifier](#modifier)|[RolledModifier](#rolledmodifier))[]
-- preffixes ([Modifier](#modifier)|[RolledModifier](#rolledmodifier))[]
+- prefixes ([Modifier](#modifier)|[RolledModifier](#rolledmodifier))[]
 - suffixes ([Modifier](#modifier)|[RolledModifier](#rolledmodifier))[]
 ---
 
@@ -180,12 +180,14 @@ Extends [Modifier](#modifier) for modifiers that have some form of roll informat
 
 ## Gear 
 Identified Gear Has all the fields of [UnidientifiedGear](#unidentifiedgear) plus the following
+Attributes is the field that holds stuff that is in gear but isn't part of implicits
+for example base durability of an item, wether or not its soubound/living etc.
 - identified `true` overrides the one set by [UnidientifiedGear](#unidentifiedgear)
 - repairslots [RepairSlots](#repairslots)
 - durability [Durability](#durability)
 - attributes ([Modifier](#modifier)|[RolledModifier](#rolledmodifier))[]
 - implicits ([Modifier](#modifier)|[RolledModifier](#rolledmodifier))[]
-- preffixes ([Modifier](#modifier)|[RolledModifier](#rolledmodifier))[]
+- prefixes ([Modifier](#modifier)|[RolledModifier](#rolledmodifier))[]
 - suffixes ([Modifier](#modifier)|[RolledModifier](#rolledmodifier))[]
 
 ##  Trinket
@@ -208,4 +210,76 @@ Optional fields are populated only if the charm is identified
 - identified `boolean` Is the charm Identified
 - god `?string` optional,The God associated with the charm
 - uses `?integer` optional,The number of uses left in the charm
-- preffixes ?[Modifier](#modifier)[] optional, The Preffixes on the Charm
+- prefixes ?[Modifier](#modifier)[] optional, The Prefixes on the Charm
+
+
+# Examples
+What follows is a set of examples, they are not complete and serve as a starting point for your code
+
+```lua
+-- Example on how to get the size of a jewel in the reader
+local function getJewelSize()
+	---@type vaultReader
+	local reader = peripheral.find("vaultreader")
+
+	if reader.getItemType() == "Jewel" then
+		local details = reader.getJewelDetails()
+		if details ~= nil then
+			for _, mod in ipairs(details.implicits) do
+				if mod.name == "Size" then
+					return mod.value
+				end
+			end
+		end
+	end
+	return nil
+end
+```
+```
+
+
+```
+```lua
+-- This Function returns a list of the names of the suffixes in the puece of gear
+local function getSuffixes()
+	---@type vaultReader
+	local reader = peripheral.find("vaultreader")
+
+	if reader.getItemType() == "Gear" then
+		local details = reader.getGearDetails()
+		local suffixes = {}
+		if details ~= nil and details.identified == true then
+			for _, mod in ipairs(details.suffixes) do
+				table.insert(suffixes, mod.name)
+			end
+			return suffixes
+		end
+		return nil
+	end
+end
+```
+```
+
+```lua
+
+--- Example on how to check if a gear piece has Souldbound on it
+local function hasSoulbound()
+	---@type vaultReader
+	local reader = peripheral.find("vaultreader")
+
+	if reader.getItemType() == "Gear" then
+		local details = reader.getGearDetails()
+		if details ~= nil and details.identified == true then
+			for _, mod in ipairs(details.attributes) do
+				if mod.name == "Soulbound" then
+					return true
+				end
+			end
+			return false
+		end
+		return nil
+	end
+end
+```
+```
+```
