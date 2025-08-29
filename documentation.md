@@ -1,4 +1,4 @@
-
+Skip To [Examples](#examples)
 ---
 `getItemType()` 
 Gets the type the item in the reader 
